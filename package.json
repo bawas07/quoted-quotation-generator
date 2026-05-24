@@ -1,0 +1,27 @@
+{
+  "name": "quotation-generator",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "date-fns": "^4.3.0",
+    "uuid": "^14.0.0",
+    "vue": "^3.5.34"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.3",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "@vue/tsconfig": "^0.9.1",
+    "jsdom": "^29.1.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.12",
+    "vitest": "^4.1.7",
+    "vue-tsc": "^3.2.8"
+  }
+}
