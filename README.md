@@ -1,4 +1,4 @@
-# Drafted by Bawa — Quotation Generator
+# Drafted by Bawas — Quotation Generator
 
 > *"Never forget what you charged last time."*
 
