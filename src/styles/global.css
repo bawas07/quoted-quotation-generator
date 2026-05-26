@@ -1,0 +1,97 @@
+/* ═══════════════════════════════════════════════
+   Global Base Styles
+   Source: docs/example-v2.html (newest design)
+   ═══════════════════════════════════════════════ */
+
+@import './tokens.css';
+@import './layout.css';
+
+/* ── CSS Reset ────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+/* ── Root / Html ──────────────────────────── */
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Body ─────────────────────────────────── */
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  background: var(--bg);
+  color: var(--text-primary);
+  overflow: hidden;
+  line-height: 1.5;
+}
+
+/* ── Buttons ──────────────────────────────── */
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  background: none;
+}
+
+/* ── Inputs / Textarea / Select ───────────── */
+input, textarea, select {
+  font-family: inherit;
+}
+
+input[type=number]::-webkit-inner-spin-button {
+  opacity: 0.3;
+}
+
+/* ── Links ────────────────────────────────── */
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ── Images ───────────────────────────────── */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Lists ────────────────────────────────── */
+ul, ol {
+  list-style: none;
+}
+
+/* ── Headings ─────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+/* ── Code / Mono ──────────────────────────── */
+code, pre, kbd, samp {
+  font-family: var(--font-mono);
+}
+
+/* ── Scrollbar (Webkit) ───────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(26, 44, 61, 0.15);
+  border-radius: 2px;
+}

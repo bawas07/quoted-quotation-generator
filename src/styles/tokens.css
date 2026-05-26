@@ -1,0 +1,99 @@
+/* ═══════════════════════════════════════════════
+   Design Tokens — CSS Custom Properties
+   Source: docs/example-v2.html (newest design)
+   ═══════════════════════════════════════════════ */
+
+:root {
+  /* ── Base palette ────────────────────────── */
+  --sky:          #EBF3FA;
+  --sky-mid:      #D8EAF5;
+  --navy:         #1A2C3D;
+  --navy-mid:     #223648;
+  --navy-lt:      #2A4258;
+  --blue:         #4A90C4;
+  --blue-dark:    #357AAE;
+  --blue-pale:    #EBF3FA;
+  --steel:        #6A8FA8;
+  --steel-lt:     #C4DCEE;
+  --cloud:        #FDFEFF;
+
+  --bg:           var(--sky);
+  --sidebar-bg:   var(--navy);
+  --accent:       var(--blue);
+  --paper:        var(--cloud);
+
+  /* ── Text on dark ────────────────────────── */
+  --text-on-dark:  #EBF3FA;
+  --text-dim:      rgba(235, 243, 250, 0.42);
+  --text-primary:  #1A2C3D;
+  --text-secondary:#2A4258;
+  --text-muted:    #5A7A92;
+
+  /* ── Borders ──────────────────────────────── */
+  --border:        #BDD4E8;
+  --border-dark:   rgba(235, 243, 250, 0.10);
+  --border-dark-h: rgba(235, 243, 250, 0.22);
+
+  /* ── Semantic colors ──────────────────────── */
+  --success: #2E7D5A;
+  --error:   #C0392B;
+  --warning: #B07D2A;
+
+  /* ── Status badge colors ──────────────────── */
+  --s-draft:    #8A9FB0;
+  --s-sent:     #4A90C4;
+  --s-accepted: #2E7D5A;
+  --s-rejected: #C0392B;
+
+  /* ── Catalog change type colors ───────────── */
+  --c-new:    #2E7D5A;
+  --c-update: #B07D2A;
+  --c-same:   #8A9FB0;
+
+  /* ── Typography ───────────────────────────── */
+  --font-serif: 'DM Serif Display', Georgia, serif;
+  --font-sans:  'DM Sans', system-ui, sans-serif;
+  --font-mono:  'DM Mono', 'Courier New', monospace;
+
+  /* ── Font-size scale ──────────────────────── */
+  --text-xs:   10px;
+  --text-sm:   11px;
+  --text-base: 13px;
+  --text-md:   14px;
+  --text-lg:   18px;
+  --text-xl:   24px;
+  --text-2xl:  32px;
+
+  /* ── Spacing scale ────────────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Border radius ────────────────────────── */
+  --r-sm: 5px;
+  --r-md: 10px;
+  --r-lg: 16px;
+
+  /* ── Shadows ──────────────────────────────── */
+  --shadow-paper: 0 2px 8px rgba(26, 44, 61, 0.06),
+                  0 16px 48px rgba(26, 44, 61, 0.12),
+                  0 32px 80px rgba(26, 44, 61, 0.07);
+  --shadow-drop:  0 2px 14px rgba(26, 44, 61, 0.18);
+  --shadow-float: 0 4px 24px rgba(26, 44, 61, 0.14);
+
+  /* ── Layout ───────────────────────────────── */
+  --sidebar-w: 420px;
+  --preview-min-w: 600px;
+  --header-height: 56px;
+
+  /* ── Transitions ──────────────────────────── */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+}
