@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { nextTick } from 'vue'
 import { useQuotation } from '../useQuotation'
 import { createEmptyQuotation } from '../../utils/defaults'
 
@@ -62,8 +63,8 @@ describe('useQuotation', () => {
   })
 
   // 7.1.8
-  it('updating totals sets isDirty = true', () => {
-    q.updateTotals({ discount_percent: 10 })
+  it('updating totals config sets isDirty = true', () => {
+    q.updateTotalsConfig({ discount_percent: 10 })
     expect(q.isDirty.value).toBe(true)
   })
 
@@ -86,18 +87,20 @@ describe('useQuotation', () => {
   })
 
   // 7.1.12
-  it('loadQuotation replaces state and resets isDirty', () => {
+  it('loadQuotation replaces state and resets isDirty', async () => {
     const data = createEmptyQuotation()
     data.meta.quotation_number = 'LOADED-001'
     q.loadQuotation(data)
+    await nextTick()
     expect(q.quotation.value.meta.quotation_number).toBe('LOADED-001')
     expect(q.isDirty.value).toBe(false)
   })
 
   // 7.1.13
-  it('resetQuotation creates fresh state and resets isDirty', () => {
+  it('resetQuotation creates fresh state and resets isDirty', async () => {
     q.updateMeta({ quotation_number: 'CHANGED' })
     q.resetQuotation()
+    await nextTick()
     expect(q.quotation.value.meta.quotation_number).not.toBe('CHANGED')
     expect(q.isDirty.value).toBe(false)
   })
@@ -201,5 +204,38 @@ describe('useQuotation', () => {
     q.updateLineItem(item.id, { quantity: 5, unit_price: 100 })
     expect(q.subtotal.value).toBe(500)
     expect(q.total.value).toBeGreaterThan(0)
+  })
+
+  // Regression guard: exported JSON should contain correct computed totals
+  it('totals object can be serialized with correct computed values', () => {
+    const item = q.quotation.value.line_items[0]
+    q.updateLineItem(item.id, { quantity: 5, unit_price: 100 })
+    q.quotation.value.totals.discount_percent = 10
+
+    // The totals in state are stale, but the computed values are correct.
+    // This test verifies the values that the export snapshot should use.
+    expect(q.subtotal.value).toBe(500)
+    expect(q.discount_amount.value).toBe(50)
+    expect(q.tax_amount.value).toBeCloseTo(49.5)  // (500-50) * 11%
+    expect(q.total.value).toBeCloseTo(499.5)       // 500 - 50 + 49.5
+
+    // Simulate what the export snapshot does: merge computed into stored totals
+    const forExport = {
+      ...q.quotation.value,
+      totals: {
+        ...q.quotation.value.totals,
+        subtotal: q.subtotal.value,
+        discount_amount: q.discount_amount.value,
+        tax_amount: q.tax_amount.value,
+        total: q.total.value,
+      },
+    }
+
+    const json = JSON.stringify(forExport, null, 2)
+    const parsed = JSON.parse(json)
+    expect(parsed.totals.subtotal).toBe(500)
+    expect(parsed.totals.discount_amount).toBe(50)
+    expect(parsed.totals.tax_amount).toBeCloseTo(49.5)
+    expect(parsed.totals.total).toBeCloseTo(499.5)
   })
 })

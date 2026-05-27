@@ -47,7 +47,7 @@ const {
   setLogo,
   addLineItem,
   removeLineItem,
-  updateTotals,
+  updateTotalsConfig,
   setStatus,
   setTemplate,
   setNotes,
@@ -83,7 +83,19 @@ function triggerImport(): void {
 }
 
 function handleDownload(): void {
-  exportQuotation(quotation.value)
+  // Merge computed totals into a snapshot before serialization
+  // The stored totals are never written back — computed values are the source of truth
+  const forExport = {
+    ...quotation.value,
+    totals: {
+      ...quotation.value.totals,
+      subtotal: subtotal.value,
+      discount_amount: discount_amount.value,
+      tax_amount: tax_amount.value,
+      total: total.value,
+    },
+  }
+  exportQuotation(forExport)
   showToast('Quotation downloaded', 'success')
 }
 
@@ -229,7 +241,7 @@ watch(
             :taxAmount="tax_amount"
             :total="total"
             :taxLabel="quotation.tax_label"
-            @update:totals="(patch) => updateTotals(patch)"
+            @update:totals="(patch) => updateTotalsConfig(patch)"
           />
 
           <NotesField

@@ -97,6 +97,28 @@ export function parseQuotationFile(file: File): Promise<QuotationData> {
           return
         }
 
+        // Validate nested field types to prevent crashes from malformed data
+        if (typeof parsed.meta !== 'object' || parsed.meta === null) {
+          reject(new Error('Invalid quotation file: "meta" must be an object.'))
+          return
+        }
+        if (typeof parsed.from !== 'object' || parsed.from === null) {
+          reject(new Error('Invalid quotation file: "from" must be an object.'))
+          return
+        }
+        if (typeof parsed.to !== 'object' || parsed.to === null) {
+          reject(new Error('Invalid quotation file: "to" must be an object.'))
+          return
+        }
+        if (!Array.isArray(parsed.line_items)) {
+          reject(new Error('Invalid quotation file: "line_items" must be an array.'))
+          return
+        }
+        if (typeof parsed.totals !== 'object' || parsed.totals === null) {
+          reject(new Error('Invalid quotation file: "totals" must be an object.'))
+          return
+        }
+
         resolve(parsed as unknown as QuotationData)
       } catch (err) {
         reject(new Error(

@@ -2,7 +2,8 @@
 // Central reactive state for the quotation form with computed totals,
 // CRUD methods for every field, and isDirty tracking.
 
-import { ref, computed, watch, type Ref } from 'vue'
+import { ref, computed, type Ref } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 import type { QuotationData, LineItem, QuotationStatus, TemplateId, QuotationMeta, Party, QuotationLogo, QuotationTotals } from '../types/quotation'
 import { createEmptyQuotation } from '../utils/defaults'
 
@@ -30,20 +31,8 @@ export function useQuotation() {
 
   // ── Dirty Tracking ───────────────────────────────────────────
 
-  // Deep watch catches any mutations not covered by explicit methods.
-  // Most mutations are tracked explicitly in each function for reliability.
-  let initialLoad = true
-  watch(
-    quotation,
-    () => {
-      if (!initialLoad) {
-        isDirty.value = true
-      }
-      initialLoad = false
-    },
-    { deep: true }
-  )
-
+  // All mutation methods call markDirty() explicitly.
+  // No deep watch needed — every mutation path goes through a method.
   function markDirty(): void {
     isDirty.value = true
   }
@@ -84,7 +73,7 @@ export function useQuotation() {
 
   function addLineItem(): void {
     quotation.value.line_items.push({
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       description: '',
       quantity: 1,
       unit_price: 0,
@@ -111,7 +100,7 @@ export function useQuotation() {
     markDirty()
   }
 
-  function updateTotals(patch: Partial<Pick<QuotationTotals, 'discount_percent' | 'tax_percent'>> & { tax_label?: string }): void {
+  function updateTotalsConfig(patch: Partial<Pick<QuotationTotals, 'discount_percent' | 'tax_percent'>> & { tax_label?: string }): void {
     if (patch.discount_percent !== undefined) {
       quotation.value.totals.discount_percent = patch.discount_percent
     }
@@ -155,7 +144,7 @@ export function useQuotation() {
     addLineItem,
     updateLineItem,
     removeLineItem,
-    updateTotals,
+    updateTotalsConfig,
     setStatus,
     setTemplate,
     setNotes,
