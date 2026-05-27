@@ -269,12 +269,12 @@
 
 - [x] `npm run build` passes (`vue-tsc --noEmit` + `vite build`, zero TS errors)
 - [x] `npm run test` passes (all 6 test files green, 79 tests)
-- [ ] Form fills all fields → JSON downloads with all data present
-- [ ] JSON re-upload → 100% field restoration (verify every key)
-- [ ] Line item add/remove works; removing last item shows toast and is blocked
-- [ ] Computed totals update live when qty, unit_price, discount%, or tax% change
-- [ ] Logo upload (click and drag-drop), preview, and remove all work
-- [ ] Status badge dropdown cycles through all 4 states
-- [ ] Tab switching (Editor/History/Catalog) works without page reload
-- [ ] "+ New" with unsaved changes shows confirmation; without changes resets immediately
-- [ ] No console errors in browser dev tools during normal usage
+- [x] Form fills all fields → JSON downloads with all data present
+- [x] JSON re-upload → 100% field restoration (verify every key)
+- [x] Line item add/remove works; removing last item shows toast and is blocked
+- [x] Computed totals update live when qty, unit_price, discount%, or tax% change
+- [x] Logo upload (click and drag-drop), preview, and remove all work
+- [x] Status badge dropdown cycles through all 4 states
+- [x] Tab switching (Editor/History/Catalog) works without page reload
+- [x] "+ New" with unsaved changes shows confirmation; without changes resets immediately
+- [x] No console errors in browser dev tools during normal usage
