@@ -37,7 +37,8 @@ function updateField<K extends keyof QuotationMeta>(key: K, value: QuotationMeta
         <label class="field-sublabel">Issue date</label>
         <input
           class="field-input"
-          type="date"
+          type="text"
+          placeholder="dd-MM-yyyy"
           :value="props.meta.issue_date"
           @input="updateField('issue_date', ($event.target as HTMLInputElement).value)"
         />
@@ -46,7 +47,8 @@ function updateField<K extends keyof QuotationMeta>(key: K, value: QuotationMeta
         <label class="field-sublabel">Valid until</label>
         <input
           class="field-input"
-          type="date"
+          type="text"
+          placeholder="dd-MM-yyyy"
           :value="props.meta.valid_until"
           @input="updateField('valid_until', ($event.target as HTMLInputElement).value)"
         />

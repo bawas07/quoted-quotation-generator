@@ -1,9 +1,10 @@
 // Default values and factory for quotation fields
+import { v4 as uuidv4 } from 'uuid'
+import { format } from 'date-fns'
 import type {
   CurrencyCode, QuotationStatus, TemplateId,
   QuotationData, QuotationMeta, Party, LineItem, QuotationTotals,
 } from '../types/quotation'
-import { format } from 'date-fns'
 
 export const DEFAULT_CURRENCY: CurrencyCode = 'IDR'
 export const DEFAULT_STATUS: QuotationStatus = 'DRAFT'
@@ -14,13 +15,13 @@ export const DEFAULT_TAX_LABEL = 'PPN'
 export const DEFAULT_NOTES = ''
 
 function todayStr(): string {
-  return format(new Date(), 'yyyy-MM-dd')
+  return format(new Date(), 'dd-MM-yyyy')
 }
 
 function futureStr(days: number): string {
   const d = new Date()
   d.setDate(d.getDate() + days)
-  return format(d, 'yyyy-MM-dd')
+  return format(d, 'dd-MM-yyyy')
 }
 
 function emptyParty(): Party {
@@ -49,7 +50,7 @@ function emptyTotals(): QuotationTotals {
 
 function emptyLineItem(): LineItem {
   return {
-    id: crypto.randomUUID(),
+    id: uuidv4(),
     description: '',
     quantity: 1,
     unit_price: 0,

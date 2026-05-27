@@ -50,7 +50,7 @@ function updateField<K extends keyof Party>(key: K, value: Party[K]): void {
       />
     </div>
 
-    <div class="field-group" v-if="props.modelValue.phone !== undefined">
+    <div class="field-group" v-if="props.modelValue.phone !== undefined && props.modelValue.phone !== ''">
       <input
         class="field-input"
         type="tel"
@@ -60,7 +60,7 @@ function updateField<K extends keyof Party>(key: K, value: Party[K]): void {
       />
     </div>
 
-    <div class="field-group" v-if="props.modelValue.website !== undefined">
+    <div class="field-group" v-if="props.modelValue.website !== undefined && props.modelValue.website !== ''">
       <input
         class="field-input"
         type="url"
