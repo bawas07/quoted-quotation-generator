@@ -110,14 +110,14 @@
 - [x] 5.1 Verify `npm run dev` boots without errors
 - [x] 5.2 Verify `npm run build` passes with zero TypeScript errors
 - [x] 5.3 Verify `npm run test` passes — all existing tests + new `useCatalogSync` tests pass
-- [ ] 5.4 Manual test: Status → SENT with line items → sync popup appears with correct classifications
-- [ ] 5.5 Manual test: Save Selected → only checked items added to catalog, status updates to SENT
-- [ ] 5.6 Manual test: Save All → all items added to catalog, status updates to SENT
-- [ ] 5.7 Manual test: Skip → catalog unchanged, status updates to SENT, toast shown
-- [ ] 5.8 Manual test: Empty line items → no popup, status updates silently
-- [ ] 5.9 Manual test: All items match catalog → all shown as SAME, pre-unchecked
-- [ ] 5.10 Manual test: One-off item (e.g., "Rush Fee" 500000) → pre-unchecked by default
-- [ ] 5.11 Manual test: Escape key closes popup (behaves as Skip)
-- [ ] 5.12 Manual test: Re-opening popup (change status away from SENT and back) → popup re-fires with fresh buildSyncList
+- [x] 5.4 Manual test: Status → SENT with line items → sync popup appears with correct classifications
+- [x] 5.5 Manual test: Save Selected → only checked items added to catalog, status updates to SENT
+- [x] 5.6 Manual test: Save All → all items added to catalog, status updates to SENT
+- [x] 5.7 Manual test: Skip → catalog unchanged, status updates to SENT, toast shown
+- [x] 5.8 Manual test: Empty line items → no popup, status updates silently
+- [x] 5.9 Manual test: All items match catalog → all shown as SAME, pre-unchecked
+- [x] 5.10 Manual test: One-off item (e.g., "Rush Fee" 500000) → pre-unchecked by default
+- [x] 5.11 Manual test: Escape key closes popup (behaves as Skip)
+- [x] 5.12 Manual test: Re-opening popup (change status away from SENT and back) → popup re-fires with fresh buildSyncList
 - [x] 5.13 Verify AppModal is reusable: rendered with correct classes, teleported to body, backdrop click behavior correct
-- [ ] 5.14 Verify zero console errors in dev tools
+- [x] 5.14 Verify zero console errors in dev tools
