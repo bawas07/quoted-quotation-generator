@@ -1,4 +1,66 @@
-/* Print-specific styles */
+/* Print-specific styles — hide chrome, render templates cleanly on A4 */
+
 @media print {
-  /* stub */
+  /* Hide all UI chrome */
+  .sidebar,
+  .preview-topbar,
+  .status-bar,
+  .sidebar-actions,
+  .action-bar {
+    display: none !important;
+  }
+
+  /* Layout adjustments */
+  .app {
+    display: block;
+    height: auto;
+  }
+
+  .preview-panel {
+    height: auto;
+    overflow: visible;
+    background: white;
+    background-image: none;
+  }
+
+  .preview-scroll {
+    padding: 0;
+    overflow: visible;
+  }
+
+  /* Paper styling */
+  .invoice-paper {
+    width: 100%;
+    min-height: auto;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .invoice-paper.switching {
+    opacity: 1 !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  /* Avoid orphans in tables */
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
 }
