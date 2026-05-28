@@ -4,7 +4,7 @@
 
 Provides add/remove line item operations with automatic recalculation, a minimum-1 guard, and catalog-backed autocomplete in the description field.
 
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Add and remove line items
 `useQuotation` MUST export `addLineItem()` and `removeLineItem(index)` methods.
@@ -23,6 +23,8 @@ Provides add/remove line item operations with automatic recalculation, a minimum
 #### Scenario: Cannot remove last line item
 - **WHEN** `removeLineItem(0)` is called with only 1 line item
 - **THEN** the line item is not removed and a warning toast is shown
+
+## ADDED Requirements
 
 ### Requirement: Description input has autocomplete dropdown
 Each line item's description `<input>` MUST trigger an autocomplete dropdown that fuzzy-searches the catalog. The input is wrapped in a positioned container (`.acwrap`) with the dropdown (`.acdrop`) appearing below it. The dropdown shows up to 6 catalog matches with name, price, description, and quoted count.
