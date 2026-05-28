@@ -3,6 +3,7 @@
 // Autocomplete on description input with catalog search
 
 import type { LineItem, CurrencyCode } from '../../types/quotation'
+import { ref } from 'vue'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { useAutocomplete } from '../../composables/useAutocomplete'
 
@@ -41,6 +42,22 @@ function removeItem(id: string): void {
 
 function addItem(): void {
   emit('add:item')
+}
+
+// ── Price field refs (via callback refs to avoid DOM query) ───
+
+const priceFields = ref(new Map<string, HTMLInputElement>())
+
+function setPriceFieldRef(id: string, el: unknown): void {
+  if (el instanceof HTMLInputElement) {
+    priceFields.value.set(id, el)
+  } else {
+    priceFields.value.delete(id)
+  }
+}
+
+function getPriceField(id: string): HTMLInputElement | null {
+  return priceFields.value.get(id) ?? null
 }
 
 // ── Autocomplete event handlers ───────────────────────────────
@@ -121,10 +138,6 @@ function handleCreateAndSelect(id: string, query: string): void {
       priceField.style.borderColor = ''
     }, 2000)
   }
-}
-
-function getPriceField(id: string): HTMLInputElement | null {
-  return document.querySelector<HTMLInputElement>(`#price-${CSS.escape(id)}`)
 }
 
 function onDropdownMouseDown(id: string, index: number, event: MouseEvent): void {
@@ -260,6 +273,7 @@ function hasExactMatch(query: string, results: Array<{ name: string }>): boolean
         </div>
         <div class="col-price">
           <input
+            :ref="(el: unknown) => setPriceFieldRef(item.id, el)"
             :id="`price-${item.id}`"
             class="item-input item-number"
             type="number"

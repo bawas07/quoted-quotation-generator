@@ -54,11 +54,7 @@ export function useAutocomplete() {
     queries[k] = query
     results[k] = searchCatalog(query)
     isOpen[k] = results[k].length > 0 || query.length >= 1
-    if (highlightedIndex[k] === undefined) {
-      highlightedIndex[k] = 0
-    } else {
-      highlightedIndex[k] = 0
-    }
+    highlightedIndex[k] = 0
   }
 
   /**
@@ -123,6 +119,7 @@ export function useAutocomplete() {
     switch (event.key) {
       case 'ArrowDown': {
         event.preventDefault()
+        if (maxIndex <= 0) return { action: null }
         const current = highlightedIndex[k] ?? 0
         highlightedIndex[k] = Math.min(current + 1, maxIndex - 1)
         return { action: null }
