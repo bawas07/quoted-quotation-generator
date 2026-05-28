@@ -1,15 +1,29 @@
 <script setup lang="ts">
-// Preview toolbar — zoom, template switch, export actions
+// Template switcher — 5 pill buttons for template selection
+
+import type { TemplateId } from '../../types/quotation'
+
+const TEMPLATES: TemplateId[] = ['classic', 'minimal', 'bold', 'sidebar', 'friendly']
+
+defineProps<{
+  modelValue: TemplateId
+}>()
+
+const emit = defineEmits<{
+  'update:modelValue': [value: TemplateId]
+}>()
 </script>
 
 <template>
-  <div class="preview-toolbar">
-    <slot />
+  <div class="tpl-switcher">
+    <button
+      v-for="tpl in TEMPLATES"
+      :key="tpl"
+      class="tpl-btn"
+      :class="{ active: modelValue === tpl }"
+      @click="emit('update:modelValue', tpl)"
+    >
+      {{ tpl }}
+    </button>
   </div>
 </template>
-
-<style scoped>
-.preview-toolbar {
-  /* stub */
-}
-</style>
