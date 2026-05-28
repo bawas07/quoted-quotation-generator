@@ -4,12 +4,14 @@
 // wires all composables into a reactive quotation editing experience.
 
 import { ref, watch } from 'vue'
-import type { LineItem, CatalogEntry, QuotationStatus, TemplateId } from './types/quotation'
+import type { LineItem, CatalogEntry, CatalogSyncItem, QuotationStatus, TemplateId } from './types/quotation'
 
 // Composables
 import { useQuotation } from './composables/useQuotation'
 import { exportQuotation, parseQuotationFile } from './composables/useJsonIO'
 import { useToast } from './composables/useToast'
+import { useCatalogSync } from './composables/useCatalogSync'
+import { useCatalog } from './composables/useCatalog'
 
 // Shells
 import SidebarShell from './components/sidebar/SidebarShell.vue'
@@ -27,6 +29,7 @@ import CatalogPanel from './components/catalog/CatalogPanel.vue'
 import CatalogEditDrawer from './components/catalog/CatalogEditDrawer.vue'
 import AppButton from './components/shared/AppButton.vue'
 import AppToast from './components/shared/AppToast.vue'
+import CatalogSyncPopup from './components/catalog/CatalogSyncPopup.vue'
 
 // Preview components
 import StatusBar from './components/preview/StatusBar.vue'
@@ -56,6 +59,13 @@ const {
 } = useQuotation()
 
 const { showToast } = useToast()
+const catalogSync = useCatalogSync()
+const { catalog } = useCatalog()
+
+// ── Sync Popup State ──────────────────────────────────────────
+
+const showSyncPopup = ref(false)
+const pendingSyncItems = ref<CatalogSyncItem[]>([])
 
 // ── Tab Switching ─────────────────────────────────────────────
 
@@ -164,6 +174,74 @@ function handleRemoveItem(id: string): void {
 
 function handleUpdateItems(items: LineItem[]): void {
   quotation.value.line_items = items
+}
+
+// ── Status Change Handler (catalog sync interception) ─────────
+
+function handleStatusChange(val: QuotationStatus): void {
+  if (val !== 'SENT') {
+    setStatus(val)
+    return
+  }
+
+  // Build sync list from current line items vs catalog
+  const syncItems = catalogSync.buildSyncList(
+    quotation.value.line_items,
+    catalog.value,
+  )
+
+  if (syncItems.length === 0) {
+    setStatus('SENT')
+    showToast('Status updated to SENT')
+    return
+  }
+
+  // Show popup, delay status update
+  pendingSyncItems.value = syncItems
+  showSyncPopup.value = true
+}
+
+// ── Sync Popup Event Handlers ─────────────────────────────────
+
+function handleSyncSaveSelected(checkedItems: CatalogSyncItem[]): void {
+  // Filter out SAME items — they're skipped by applySyncItems
+  const toApply = checkedItems.filter((i) => i.change_type !== 'SAME')
+
+  catalogSync.applySyncItems(
+    toApply,
+    quotation.value.meta.currency,
+    quotation.value.to.name,
+    quotation.value.meta.issue_date,
+    quotation.value.meta.quotation_number,
+  )
+  setStatus('SENT')
+  showToast(`${toApply.length} items saved to catalog ✓`)
+  showSyncPopup.value = false
+  pendingSyncItems.value = []
+}
+
+function handleSyncSaveAll(items: CatalogSyncItem[]): void {
+  // Filter out SAME items — they're skipped by applySyncItems
+  const toApply = items.filter((i) => i.change_type !== 'SAME')
+
+  catalogSync.applySyncItems(
+    toApply,
+    quotation.value.meta.currency,
+    quotation.value.to.name,
+    quotation.value.meta.issue_date,
+    quotation.value.meta.quotation_number,
+  )
+  setStatus('SENT')
+  showToast(`${toApply.length} items saved to catalog ✓`)
+  showSyncPopup.value = false
+  pendingSyncItems.value = []
+}
+
+function handleSyncClose(): void {
+  setStatus('SENT')
+  showToast('Status updated to SENT, catalog unchanged')
+  showSyncPopup.value = false
+  pendingSyncItems.value = []
 }
 
 // ── 80ms debounce for preview updates ─────────────────────────
@@ -338,7 +416,7 @@ watch(
           <div class="status-wrap">
             <StatusSelector
               :modelValue="quotation.status"
-              @update:modelValue="(val: QuotationStatus) => setStatus(val)"
+              @update:modelValue="handleStatusChange"
             />
           </div>
         </div>
@@ -355,6 +433,19 @@ watch(
         </div>
       </div>
     </PreviewPanel>
+
+    <!-- ════ SYNC POPUP ════ -->
+    <CatalogSyncPopup
+      v-if="showSyncPopup"
+      :open="showSyncPopup"
+      :items="pendingSyncItems"
+      :quotationNumber="quotation.meta.quotation_number"
+      :clientName="quotation.to.name"
+      :currency="quotation.meta.currency"
+      @close="handleSyncClose"
+      @save-selected="handleSyncSaveSelected"
+      @save-all="handleSyncSaveAll"
+    />
 
     <!-- ════ TOAST CONTAINER ════ -->
     <AppToast />
