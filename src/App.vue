@@ -4,7 +4,7 @@
 // wires all composables into a reactive quotation editing experience.
 
 import { ref, watch } from 'vue'
-import type { LineItem, QuotationStatus, TemplateId } from './types/quotation'
+import type { LineItem, CatalogEntry, QuotationStatus, TemplateId } from './types/quotation'
 
 // Composables
 import { useQuotation } from './composables/useQuotation'
@@ -23,6 +23,8 @@ import StatusSelector from './components/sidebar/StatusSelector.vue'
 import LineItemsTable from './components/sidebar/LineItemsTable.vue'
 import TotalsFields from './components/sidebar/TotalsFields.vue'
 import NotesField from './components/sidebar/NotesField.vue'
+import CatalogPanel from './components/catalog/CatalogPanel.vue'
+import CatalogEditDrawer from './components/catalog/CatalogEditDrawer.vue'
 import AppButton from './components/shared/AppButton.vue'
 import AppToast from './components/shared/AppToast.vue'
 
@@ -59,6 +61,26 @@ const { showToast } = useToast()
 
 type Tab = 'editor' | 'history' | 'catalog'
 const activeTab = ref<Tab>('editor')
+
+// ── Catalog Drawer State ─────────────────────────────────────
+
+const showCatalogDrawer = ref(false)
+const editingCatalogItem = ref<CatalogEntry | null>(null)
+
+function openCatalogAddDrawer(): void {
+  editingCatalogItem.value = null
+  showCatalogDrawer.value = true
+}
+
+function openCatalogEditDrawer(item: CatalogEntry): void {
+  editingCatalogItem.value = item
+  showCatalogDrawer.value = true
+}
+
+function closeCatalogDrawer(): void {
+  showCatalogDrawer.value = false
+  editingCatalogItem.value = null
+}
 
 // ── Import file input ─────────────────────────────────────────
 
@@ -257,11 +279,19 @@ watch(
 
         <!-- Catalog tab -->
         <div class="tab-pane" :class="{ active: activeTab === 'catalog' }">
-          <p style="padding:20px 0;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);text-align:center">
-            Catalog stub — CRUD interface coming in M2
-          </p>
+          <CatalogPanel
+            @add:item="openCatalogAddDrawer"
+            @edit:item="openCatalogEditDrawer"
+          />
         </div>
       </div>
+
+      <!-- Catalog Edit Drawer (top-level overlay) -->
+      <CatalogEditDrawer
+        :open="showCatalogDrawer"
+        :editing-item="editingCatalogItem"
+        @close="closeCatalogDrawer"
+      />
 
       <!-- Unsaved changes confirmation overlay -->
       <div v-if="showUnsavedConfirm" class="unsaved-overlay">
