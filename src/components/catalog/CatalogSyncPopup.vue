@@ -8,7 +8,7 @@
  */
 
 import { ref, computed, watch } from 'vue'
-import type { CatalogSyncItem } from '../../types/quotation'
+import type { CatalogSyncItem, CurrencyCode } from '../../types/quotation'
 import { formatCurrency } from '../../utils/formatCurrency'
 import AppModal from '../shared/AppModal.vue'
 
@@ -18,9 +18,11 @@ const props = withDefaults(
     items: CatalogSyncItem[]
     quotationNumber: string
     clientName: string
+    currency?: CurrencyCode
   }>(),
   {
     open: false,
+    currency: 'IDR',
   },
 )
 
@@ -116,7 +118,7 @@ function lastHistoryEntry(item: CatalogSyncItem): string {
 <template>
   <AppModal
     :open="open"
-    :closable="false"
+    :closable="true"
     title="Save to Catalog?"
     :subtitle="`Review items from ${quotationNumber} · ${clientName}`"
     @close="handleClose"
@@ -130,7 +132,7 @@ function lastHistoryEntry(item: CatalogSyncItem): string {
     <div v-else class="sync-list">
       <div
         v-for="(syncItem, index) in localItems"
-        :key="index"
+        :key="syncItem.item.id ?? index"
         class="sync-item"
       >
         <input
@@ -153,7 +155,7 @@ function lastHistoryEntry(item: CatalogSyncItem): string {
         </div>
 
         <div class="sync-price">
-          {{ formatCurrency(syncItem.item.unit_price ?? 0) }}
+          {{ formatCurrency(syncItem.item.unit_price ?? 0, currency) }}
         </div>
       </div>
     </div>

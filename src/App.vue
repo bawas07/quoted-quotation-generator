@@ -204,29 +204,35 @@ function handleStatusChange(val: QuotationStatus): void {
 // ── Sync Popup Event Handlers ─────────────────────────────────
 
 function handleSyncSaveSelected(checkedItems: CatalogSyncItem[]): void {
+  // Filter out SAME items — they're skipped by applySyncItems
+  const toApply = checkedItems.filter((i) => i.change_type !== 'SAME')
+
   catalogSync.applySyncItems(
-    checkedItems,
+    toApply,
     quotation.value.meta.currency,
     quotation.value.to.name,
     quotation.value.meta.issue_date,
     quotation.value.meta.quotation_number,
   )
   setStatus('SENT')
-  showToast(`${checkedItems.length} items saved to catalog ✓`)
+  showToast(`${toApply.length} items saved to catalog ✓`)
   showSyncPopup.value = false
   pendingSyncItems.value = []
 }
 
 function handleSyncSaveAll(items: CatalogSyncItem[]): void {
+  // Filter out SAME items — they're skipped by applySyncItems
+  const toApply = items.filter((i) => i.change_type !== 'SAME')
+
   catalogSync.applySyncItems(
-    items,
+    toApply,
     quotation.value.meta.currency,
     quotation.value.to.name,
     quotation.value.meta.issue_date,
     quotation.value.meta.quotation_number,
   )
   setStatus('SENT')
-  showToast(`${items.length} items saved to catalog ✓`)
+  showToast(`${toApply.length} items saved to catalog ✓`)
   showSyncPopup.value = false
   pendingSyncItems.value = []
 }
@@ -435,6 +441,7 @@ watch(
       :items="pendingSyncItems"
       :quotationNumber="quotation.meta.quotation_number"
       :clientName="quotation.to.name"
+      :currency="quotation.meta.currency"
       @close="handleSyncClose"
       @save-selected="handleSyncSaveSelected"
       @save-all="handleSyncSaveAll"

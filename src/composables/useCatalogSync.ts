@@ -101,21 +101,24 @@ export function useCatalogSync() {
       }
 
       if (si.change_type === 'UPDATE' && si.match) {
-        const entry = si.match
-        const prevPrice = entry.price
+        // Re-read from live catalog to avoid stale data
+        // when multiple items match the same entry in one batch
+        const liveEntry = catalog.catalog.value.find((e) => e.id === si.match!.id)
+        if (!liveEntry) continue
 
-        // Push price history before updating
+        const livePrevPrice = liveEntry.price
+
         const historyEntry = {
-          price: prevPrice,
+          price: livePrevPrice,
           date: issueDate,
           client: toName,
           num: quotationNumber,
         }
 
-        catalog.updateItem(entry.id, {
-          price: si.item.unit_price ?? prevPrice,
-          history: [...entry.history, historyEntry],
-          times: entry.times + 1,
+        catalog.updateItem(liveEntry.id, {
+          price: si.item.unit_price ?? livePrevPrice,
+          history: [...liveEntry.history, historyEntry],
+          times: liveEntry.times + 1,
         })
       }
     }
@@ -124,7 +127,7 @@ export function useCatalogSync() {
   // ── Expose ──────────────────────────────────────────────────
 
   return {
-    syncItems: readonly(syncItems) as Ref<CatalogSyncItem[]>,
+    syncItems: readonly(syncItems),
     checkedCount,
     buildSyncList,
     applySyncItems,
