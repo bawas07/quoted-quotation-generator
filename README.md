@@ -30,11 +30,12 @@ A browser-based quotation generator for freelancers and small businesses. Fill i
 | Layer | Choice |
 |-------|--------|
 | Framework | Vue 3 + TypeScript |
-| Build | Vite |
+| Build | Vite 8 |
 | Styling | Raw CSS with CSS custom properties (design tokens) |
-| State | Vue `ref()`, `reactive()`, composables |
-| Persistence | `localStorage` (`quotify_` prefix) |
+| State | Vue `ref()`, `reactive()`, composables (singleton pattern) |
+| Persistence | `localStorage` (`quotify_` prefix) via typed helpers |
 | PDF | `window.print()` + print CSS |
+| Test | Vitest + jsdom + `@vue/test-utils` |
 | Deploy | Cloudflare Pages |
 
 **Dependencies:** `uuid`, `date-fns`
@@ -67,7 +68,7 @@ npm run build
 ```
 src/
 ├── components/
-│   ├── sidebar/       # Form components (editor tab)
+│   ├── sidebar/          # Form components (editor tab)
 │   │   ├── SidebarShell.vue
 │   │   ├── LogoUpload.vue
 │   │   ├── PartyFields.vue
@@ -76,14 +77,15 @@ src/
 │   │   ├── TotalsFields.vue
 │   │   ├── NotesField.vue
 │   │   └── StatusSelector.vue
-│   ├── catalog/       # Catalog tab
+│   ├── catalog/          # Catalog tab
 │   │   ├── CatalogPanel.vue
 │   │   ├── CatalogItem.vue
 │   │   ├── CatalogEditDrawer.vue
 │   │   ├── CatalogSearch.vue
 │   │   └── CatalogSyncPopup.vue
-│   ├── preview/       # Preview panel + templates
+│   ├── preview/          # Preview panel + templates
 │   │   ├── PreviewPanel.vue
+│   │   ├── PreviewEmpty.vue
 │   │   ├── TemplateSwitcher.vue
 │   │   ├── StatusBar.vue
 │   │   └── templates/
@@ -92,28 +94,41 @@ src/
 │   │       ├── TemplateBold.vue
 │   │       ├── TemplateSidebar.vue
 │   │       └── TemplateFriendly.vue
-│   ├── shared/        # Reusable UI
+│   ├── shared/           # Reusable UI
 │   │   ├── AppButton.vue
 │   │   ├── AppToast.vue
 │   │   ├── AppModal.vue
 │   │   └── ActionBar.vue
 │   └── HistoryPanel.vue
-├── composables/       # Vue composables (useQuotation, useCatalog, etc.)
-├── types/             # TypeScript type definitions
-│   └── quotation.ts
-├── utils/             # Pure utility functions
-│   ├── calculations.ts
-│   ├── defaults.ts
-│   ├── formatCurrency.ts
-│   ├── generateFilename.ts
-│   ├── fuzzyMatch.ts
-│   └── localStorage.ts
-├── styles/            # CSS
-│   ├── tokens.css     # Design tokens (colors, typography, spacing)
-│   ├── global.css     # Reset & base styles
-│   └── print.css      # Print/PDF styles
-├── App.vue            # Root - two-column layout
-└── main.ts            # Entry point
+├── composables/          # Vue composables (singleton pattern)
+│   ├── useQuotation.ts   # Core quotation state & computed totals
+│   ├── useCatalog.ts     # Catalog CRUD + localStorage persistence
+│   ├── useAutocomplete.ts # Fuzzy autocomplete for line items
+│   ├── useJsonIO.ts      # Export/import quotation JSON
+│   ├── useLogoUpload.ts  # Logo drag-and-drop + base64
+│   ├── useToast.ts       # Toast notifications
+│   ├── useHistory.ts     # History persistence (stub)
+│   ├── useCatalogSync.ts # Sync popup logic (stub)
+│   ├── useTemplate.ts    # Template switching (stub)
+│   ├── usePrint.ts       # PDF print (stub)
+│   └── useWorkspaceIO.ts # Workspace backup (stub)
+├── types/
+│   └── quotation.ts      # All TypeScript type definitions
+├── utils/                # Pure utility functions (zero Vue imports)
+│   ├── index.ts          # Barrel export
+│   ├── calculations.ts   # subtotal, discount, tax, total
+│   ├── defaults.ts       # createEmptyQuotation() factory
+│   ├── formatCurrency.ts # Locale-aware currency formatting
+│   ├── generateFilename.ts # QUO-001_ClientName_date.json
+│   ├── fuzzyMatch.ts     # Fuzzy search for autocomplete
+│   └── localStorage.ts   # Typed get/set/remove helpers
+├── styles/
+│   ├── tokens.css        # Design tokens (colors, typography, spacing)
+│   ├── global.css        # Reset & base styles
+│   ├── layout.css        # App grid, sidebar, preview layout
+│   └── print.css         # Print/PDF styles
+├── App.vue               # Root — two-column layout
+└── main.ts               # Entry point
 ```
 
 ---
@@ -147,26 +162,28 @@ Quotation added to history (localStorage, logo stripped)
 
 ## Build Phases (Milestones)
 
-| # | Name | Status |
-|---|------|--------|
-| M0 | Foundation — scaffold, types, design tokens, localStorage lib, layout shell | 📋 Planned |
-| M1 | Core Form + JSON IO — working form, export/import | ⏳ |
-| M2 | Catalog — CRUD, persistence, autocomplete | ⏳ |
-| M3 | Catalog Sync Popup — status trigger, fuzzy match | ⏳ |
-| M4 | Preview + Templates — live preview, 5 templates, status badge | ⏳ |
-| M5 | History + Workspace IO — localStorage history, backup/restore | ⏳ |
-| M6 | Print + Deploy — PDF, Cloudflare Pages | ⏳ |
-| M7 | Stretch Goals — mobile layout, tags, PWA, i18n | 🔮 |
+| # | Name | Status | Tests |
+|---|------|--------|-------|
+| M0 | Foundation — scaffold, types, design tokens, localStorage lib, layout shell | ✅ Complete | 10 |
+| M1 | Core Form + JSON IO — working form, export/import | ✅ Complete | 78 |
+| M2 | Catalog — CRUD, persistence, autocomplete | ✅ Complete | 28 |
+| M3 | Catalog Sync Popup — status trigger, fuzzy match (stubbed) | 🚧 In Progress | — |
+| M4 | Preview + Templates — live preview, 5 templates, status badge (stubbed) | 🚧 In Progress | — |
+| M5 | History + Workspace IO — localStorage history, backup/restore (stubbed) | 🚧 In Progress | — |
+| M6 | Print + Deploy — PDF, Cloudflare Pages | 📋 Planned | — |
+| M7 | Stretch Goals — mobile layout, tags, PWA, i18n | 🔮 Future | — |
+
+**Total: 121 tests · 9 test files · all passing**
 
 ---
 
-## Monetization
+## Roadmap
 
 **V1 is free and local-first.** No database, no auth, no infra cost.
 
-The natural upgrade trigger is user frustration with localStorage limitations (losing data when switching devices). That frustration signals the right time to introduce a paid tier with cloud sync.
+The current focus is completing M3–M5 (catalog sync, preview templates, history) to reach a shippable V1. See [`docs/milestone.md`](docs/milestone.md) for the full task breakdown.
 
-See [`docs/PRD.md`](docs/PRD.md) §14 for the full monetization roadmap.
+A natural upgrade path is cloud sync for users who hit localStorage limits or switch devices. See [`docs/PRD.md`](docs/PRD.md) for the broader vision.
 
 ---
 
@@ -181,7 +198,7 @@ Ink, cream, rust palette. DM type family (DM Serif Display + DM Sans + DM Mono).
 - [`docs/PRD.md`](docs/PRD.md) — Full product requirements
 - [`docs/design.md`](docs/design.md) — Visual design & components
 - [`docs/milestone.md`](docs/milestone.md) — Build phases & tasks
-- [`docs/example.html`](docs/example.html) — Working vanilla JS prototype
+- [`docs/example-v2.html`](docs/example-v2.html) — Working vanilla JS prototype
 
 ---
 
