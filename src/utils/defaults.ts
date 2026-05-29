@@ -12,6 +12,7 @@ export const DEFAULT_TEMPLATE: TemplateId = 'classic'
 export const DEFAULT_TAX_RATE = 11
 export const DEFAULT_DISCOUNT = 0
 export const DEFAULT_TAX_LABEL = 'PPN'
+export const DEFAULT_DISCOUNT_LABEL = 'Discount'
 export const DEFAULT_NOTES = ''
 
 function todayStr(): string {
@@ -89,6 +90,7 @@ export function createEmptyQuotation(nextNumber?: number): QuotationData {
     line_items: [emptyLineItem()],
     totals: emptyTotals(),
     tax_label: DEFAULT_TAX_LABEL,
+    discount_label: DEFAULT_DISCOUNT_LABEL,
     notes: DEFAULT_NOTES,
     created_at: nowStr,
     updated_at: nowStr,

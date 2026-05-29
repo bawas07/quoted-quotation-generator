@@ -100,7 +100,7 @@ export function useQuotation(nextNumber?: number) {
     markDirty()
   }
 
-  function updateTotalsConfig(patch: Partial<Pick<QuotationTotals, 'discount_percent' | 'tax_percent'>> & { tax_label?: string }): void {
+  function updateTotalsConfig(patch: Partial<Pick<QuotationTotals, 'discount_percent' | 'tax_percent'>> & { tax_label?: string; discount_label?: string }): void {
     if (patch.discount_percent !== undefined) {
       quotation.value.totals.discount_percent = patch.discount_percent
     }
@@ -109,6 +109,9 @@ export function useQuotation(nextNumber?: number) {
     }
     if (patch.tax_label !== undefined) {
       quotation.value.tax_label = patch.tax_label
+    }
+    if (patch.discount_label !== undefined) {
+      quotation.value.discount_label = patch.discount_label
     }
     markDirty()
   }

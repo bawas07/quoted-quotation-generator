@@ -69,6 +69,7 @@ export interface QuotationData {
   line_items: LineItem[]
   totals: QuotationTotals
   tax_label: string
+  discount_label: string
   notes: string
   created_at: string
   updated_at: string

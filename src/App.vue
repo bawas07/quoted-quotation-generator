@@ -26,6 +26,7 @@ import LogoUpload from './components/sidebar/LogoUpload.vue'
 import PartyFields from './components/sidebar/PartyFields.vue'
 import MetaFields from './components/sidebar/MetaFields.vue'
 import LineItemsTable from './components/sidebar/LineItemsTable.vue'
+import TaxDiscount from './components/sidebar/TaxDiscount.vue'
 import TotalsFields from './components/sidebar/TotalsFields.vue'
 import NotesField from './components/sidebar/NotesField.vue'
 import CatalogPanel from './components/catalog/CatalogPanel.vue'
@@ -444,15 +445,22 @@ watch(
             @remove:item="handleRemoveItem"
           />
 
+          <TaxDiscount
+            :discountPercent="quotation.totals.discount_percent"
+            :taxPercent="quotation.totals.tax_percent"
+            :discountLabel="quotation.discount_label"
+            :taxLabel="quotation.tax_label"
+            @update:totals="(patch) => updateTotalsConfig(patch)"
+          />
+
           <TotalsFields
-            :totals="quotation.totals"
             :currency="quotation.meta.currency"
             :subtotal="subtotal"
             :discountAmount="discount_amount"
             :taxAmount="tax_amount"
             :total="total"
+            :discountLabel="quotation.discount_label"
             :taxLabel="quotation.tax_label"
-            @update:totals="(patch) => updateTotalsConfig(patch)"
           />
 
           <NotesField
