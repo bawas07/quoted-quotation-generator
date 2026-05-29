@@ -12,7 +12,7 @@ import { STORAGE_KEYS } from '../types/quotation'
 /**
  * History entry extends QuotationData with an internal-only _hadLogo flag.
  * The flag is set to true when the original quotation had a logo before stripping.
- * It's only present in localStorage history, never in exported JSON.
+ * It's preserved in workspace backup exports so it survives round-trips.
  */
 export interface HistoryEntry extends QuotationData {
   _hadLogo?: boolean
@@ -29,13 +29,11 @@ function ensureLoaded(): void {
 }
 
 function persist(): void {
-  // Proactive storage check: try writing a small probe value
-  try {
-    localStorage.setItem('quoted__probe_', '1')
-    localStorage.removeItem('quoted__probe_')
-  } catch {
+  // Proactive storage check: warn if < 1MB remains
+  const { remainingMB } = storage.checkAvailable()
+  if (remainingMB < 1) {
     const { showToast } = useToast()
-    showToast('Storage full — export your workspace to free up space.', 'warning')
+    showToast('Storage almost full. Export your workspace to free up space.', 'warning')
   }
 
   storage.set(STORAGE_KEYS.HISTORY, history.value)
@@ -72,8 +70,10 @@ export function useHistory() {
     const entry = clone(quotation) as HistoryEntry
 
     // Strip logo and mark if one existed
-    const hadLogo = entry.logo !== null && (entry.logo?.data?.length ?? 0) > 0
-    entry._hadLogo = hadLogo
+    if (entry.logo !== null && (entry.logo?.data?.length ?? 0) > 0) {
+      entry._hadLogo = true
+    }
+    // If logo is already null, preserve existing _hadLogo (e.g., on workspace import entries)
     entry.logo = null
 
     // Refresh updated_at to now
@@ -118,6 +118,16 @@ export function useHistory() {
   }
 
   /**
+   * Replace all history entries with a new set and persist to localStorage.
+   * Used by workspace import to restore a merged history.
+   * Preserves entry timestamps and _hadLogo as-is (no recalc).
+   */
+  function replaceAllHistory(entries: HistoryEntry[]): void {
+    history.value = entries
+    persist()
+  }
+
+  /**
    * Scan all history entries and return the next quotation number.
    * Finds the highest numeric suffix in existing entries and returns max + 1.
    * Returns 1 if history is empty or no numeric entries exist.
@@ -139,6 +149,7 @@ export function useHistory() {
     addToHistory,
     loadFromHistory,
     clearHistory,
+    replaceAllHistory,
     getNextQuotationNumber,
   }
 }

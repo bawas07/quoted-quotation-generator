@@ -8,6 +8,7 @@ import type { CatalogEntry } from '../types/quotation'
 import { storage } from '../utils/localStorage'
 import { fuzzySearch } from '../utils/fuzzyMatch'
 import { STORAGE_KEYS } from '../types/quotation'
+import { useToast } from './useToast'
 
 // Module-level singleton state
 const catalog: Ref<CatalogEntry[]> = ref([])
@@ -21,6 +22,13 @@ function ensureLoaded(): void {
 }
 
 function persist(): void {
+  // Proactive storage check: warn if < 1MB remains
+  const { remainingMB } = storage.checkAvailable()
+  if (remainingMB < 1) {
+    const { showToast } = useToast()
+    showToast('Storage almost full. Export your workspace to free up space.', 'warning')
+  }
+
   storage.set(STORAGE_KEYS.CATALOG, catalog.value)
 }
 

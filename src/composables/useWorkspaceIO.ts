@@ -3,7 +3,7 @@
 // to produce or consume a combined workspace backup JSON file.
 
 import { useCatalog } from './useCatalog'
-import { useHistory } from './useHistory'
+import { useHistory, type HistoryEntry } from './useHistory'
 import { useToast } from './useToast'
 import { normalize } from '../utils/fuzzyMatch'
 import type { WorkspaceBackup, CatalogEntry, QuotationData } from '../types/quotation'
@@ -86,6 +86,13 @@ export function useWorkspaceIO() {
       }
 
       applyWorkspaceData(backup)
+
+      const catCount = backup.catalog?.length || 0
+      const histCount = backup.history?.length || 0
+      showToast(
+        `Workspace restored — ${catCount} catalog item${catCount !== 1 ? 's' : ''}, ` +
+        `${histCount} quotation${histCount !== 1 ? 's' : ''} ✓`
+      )
     } catch {
       showToast('Couldn\'t read this file.', 'error')
     }
@@ -100,7 +107,7 @@ export function useWorkspaceIO() {
     const catCount = data.catalog?.length || 0
     const histCount = data.history?.length || 0
     showToast(
-      `Workspace restored — ${catCount} item${catCount !== 1 ? 's' : ''}, ` +
+      `Workspace restored — ${catCount} catalog item${catCount !== 1 ? 's' : ''}, ` +
       `${histCount} quotation${histCount !== 1 ? 's' : ''} ✓`
     )
   }
@@ -131,7 +138,7 @@ function parseAndValidateWorkspace(parsed: unknown): WorkspaceBackup | null {
  */
 function applyWorkspaceData(backup: WorkspaceBackup): void {
   const { catalog, replaceAll } = useCatalog()
-  const { history, addToHistory, clearHistory } = useHistory()
+  const { history, replaceAllHistory } = useHistory()
 
   // Merge catalog
   const importedCatalog = backup.catalog || []
@@ -143,13 +150,9 @@ function applyWorkspaceData(backup: WorkspaceBackup): void {
   const currentHistory = clone(history.value)
   const mergedHistory = mergeHistoryEntries(currentHistory, importedHistory)
 
-  // Persist merged data
+  // Persist merged data in batch
   replaceAll(mergedCatalog)
-
-  clearHistory()
-  for (const entry of mergedHistory) {
-    addToHistory(entry)
-  }
+  replaceAllHistory(mergedHistory as HistoryEntry[])
 }
 
 // ── Catalog Merge Logic ──────────────────────────────────────
