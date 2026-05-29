@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provides the central reactive quotation state with computed totals and dirty tracking, serving as the single source of truth for all form components.
+Provides the central reactive quotation state with computed totals, dirty tracking, and template switching animation state, serving as the single source of truth for all form and preview components.
 
 ## Requirements
 
@@ -44,3 +44,24 @@ Provides the central reactive quotation state with computed totals and dirty tra
 #### Scenario: isDirty becomes true on mutation
 - **WHEN** a field on `quotation.value` is modified
 - **THEN** `isDirty.value` becomes `true`
+
+### Requirement: useTemplate composable for cross-fade animation
+A `useTemplate` composable MUST export `isSwitching: Ref<boolean>` initialized `false`, and `triggerSwitch()` that sets `isSwitching` to `true`, then after 150ms sets it back to `false`.
+
+#### Scenario: isSwitching initializes false
+- **WHEN** `useTemplate()` is called
+- **THEN** `isSwitching.value` is `false`
+
+#### Scenario: triggerSwitch toggles state
+- **WHEN** `triggerSwitch()` is called
+- **THEN** `isSwitching.value` becomes `true`
+- **THEN** after 150ms, `isSwitching.value` becomes `false`
+
+### Requirement: Template switch triggers cross-fade in App.vue
+When the user selects a new template via `TemplateSwitcher`, App.vue MUST call `useTemplate.triggerSwitch()` and update `quotation.template` after the fade-out begins.
+
+#### Scenario: Template selection triggers animation
+- **WHEN** user clicks "Minimal" pill in TemplateSwitcher
+- **THEN** `triggerSwitch()` is called, setting `isSwitching` to `true`
+- **THEN** `quotation.template` is updated to `'minimal'`
+- **THEN** the preview fades out, swaps component, and fades in

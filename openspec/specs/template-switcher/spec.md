@@ -7,11 +7,11 @@ Provides a set of template selection pills wired to reactive state for changing 
 ## Requirements
 
 ### Requirement: Template selection pills
-`TemplateSwitcher` MUST render 5 pill-style buttons for Classic, Minimal, Bold, Sidebar, and Friendly templates.
+`TemplateSwitcher` MUST render 5 pill-style buttons with capitalized display names: Classic, Minimal, Bold, Sidebar, and Friendly.
 
-#### Scenario: All templates shown
+#### Scenario: All templates shown with display names
 - **WHEN** `TemplateSwitcher` renders
-- **THEN** 5 template pills are visible: Classic, Minimal, Bold, Sidebar, and Friendly
+- **THEN** 5 template pills are visible with labels: "Classic", "Minimal", "Bold", "Sidebar", "Friendly"
 
 ### Requirement: Template wired to reactive state
 Selecting a template MUST update `quotation.value.template` and visually indicate the active selection.
