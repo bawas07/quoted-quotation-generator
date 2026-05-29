@@ -103,7 +103,7 @@ defineProps<{
             <span class="tpl-total-value">{{ formatAmount(quotation.totals.subtotal, quotation.meta.currency) }}</span>
           </div>
           <div v-if="quotation.totals.discount_percent > 0" class="tpl-total-row">
-            <span class="tpl-total-label">Discount ({{ quotation.totals.discount_percent }}%)</span>
+            <span class="tpl-total-label">{{ quotation.discount_label }} ({{ quotation.totals.discount_percent }}%)</span>
             <span class="tpl-total-value">-{{ formatAmount(quotation.totals.discount_amount, quotation.meta.currency) }}</span>
           </div>
           <div v-if="quotation.totals.tax_percent > 0" class="tpl-total-row">

@@ -4,7 +4,7 @@
 // wires all composables into a reactive quotation editing experience.
 
 import { ref, watch } from 'vue'
-import type { LineItem, CatalogEntry, CatalogSyncItem, QuotationStatus, TemplateId } from './types/quotation'
+import type { LineItem, CatalogEntry, CatalogSyncItem, QuotationStatus, TemplateId, QuotationData, WorkspaceBackup } from './types/quotation'
 import type { Component } from 'vue'
 
 // Composables
@@ -14,6 +14,8 @@ import { useToast } from './composables/useToast'
 import { useCatalogSync } from './composables/useCatalogSync'
 import { useCatalog } from './composables/useCatalog'
 import { useTemplate } from './composables/useTemplate'
+import { useHistory } from './composables/useHistory'
+import { useWorkspaceIO } from './composables/useWorkspaceIO'
 
 // Shells
 import SidebarShell from './components/sidebar/SidebarShell.vue'
@@ -24,6 +26,7 @@ import LogoUpload from './components/sidebar/LogoUpload.vue'
 import PartyFields from './components/sidebar/PartyFields.vue'
 import MetaFields from './components/sidebar/MetaFields.vue'
 import LineItemsTable from './components/sidebar/LineItemsTable.vue'
+import TaxDiscount from './components/sidebar/TaxDiscount.vue'
 import TotalsFields from './components/sidebar/TotalsFields.vue'
 import NotesField from './components/sidebar/NotesField.vue'
 import CatalogPanel from './components/catalog/CatalogPanel.vue'
@@ -31,6 +34,7 @@ import CatalogEditDrawer from './components/catalog/CatalogEditDrawer.vue'
 import AppButton from './components/shared/AppButton.vue'
 import AppToast from './components/shared/AppToast.vue'
 import CatalogSyncPopup from './components/catalog/CatalogSyncPopup.vue'
+import HistoryPanel from './components/HistoryPanel.vue'
 
 // Preview components
 import StatusBar from './components/preview/StatusBar.vue'
@@ -44,6 +48,9 @@ import TemplateSidebar from './components/preview/templates/TemplateSidebar.vue'
 import TemplateFriendly from './components/preview/templates/TemplateFriendly.vue'
 
 // ── Composable instances ──────────────────────────────────────
+
+const { history, addToHistory, getNextQuotationNumber } = useHistory()
+const initialNextNumber = getNextQuotationNumber()
 
 const {
   quotation,
@@ -64,12 +71,13 @@ const {
   setStatus,
   setTemplate,
   setNotes,
-} = useQuotation()
+} = useQuotation(initialNextNumber)
 
 const { showToast } = useToast()
 const catalogSync = useCatalogSync()
 const { catalog } = useCatalog()
 const { isSwitching, triggerSwitch } = useTemplate()
+const { importWorkspaceData } = useWorkspaceIO()
 
 // Template component map for dynamic rendering
 const TEMPLATE_COMPONENTS: Record<TemplateId, Component> = {
@@ -84,6 +92,8 @@ const TEMPLATE_COMPONENTS: Record<TemplateId, Component> = {
 
 const showSyncPopup = ref(false)
 const pendingSyncItems = ref<CatalogSyncItem[]>([])
+type SyncPopupMode = 'sent' | 'save'
+const syncPopupMode = ref<SyncPopupMode>('sent')
 
 // ── Tab Switching ─────────────────────────────────────────────
 
@@ -118,24 +128,55 @@ async function handleImportFile(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  input.value = ''
+
   try {
-    const data = await parseQuotationFile(file)
-    loadQuotation(data)
+    // Read file text first to inspect the type field
+    const text = await file.text()
+    const parsed: unknown = JSON.parse(text)
+
+    if (!parsed || typeof parsed !== 'object') {
+      showToast('Unknown file format.', 'error')
+      return
+    }
+
+    const data = parsed as Record<string, unknown>
+
+    if (data.type === 'workspace_backup') {
+      // Route to workspace import
+      importWorkspaceData(data as unknown as WorkspaceBackup)
+      return
+    }
+
+    // For quotation type, delegate to parseQuotationFile for full validation
+    // Re-create the file from text since we already consumed the original
+    const reprocessedFile = new File([text], file.name, { type: 'application/json' })
+    const quotation = await parseQuotationFile(reprocessedFile)
+    loadQuotation(quotation)
+    addToHistory(quotation)
     showToast('Quotation loaded successfully', 'success')
   } catch (err) {
-    showToast(err instanceof Error ? err.message : 'Failed to import quotation', 'error')
+    if (err instanceof SyntaxError) {
+      showToast('Couldn\'t read this file.', 'error')
+    } else {
+      showToast(
+        err instanceof Error ? err.message : 'Failed to import file',
+        'error'
+      )
+    }
   }
-  input.value = ''
 }
 
 function triggerImport(): void {
   importFileInput.value?.click()
 }
 
-function handleDownload(): void {
-  // Merge computed totals into a snapshot before serialization
-  // The stored totals are never written back — computed values are the source of truth
-  const forExport = {
+/**
+ * Build a complete quotation snapshot with computed totals.
+ * Used by save-to-history, JSON download, and auto-save on SENT.
+ */
+function buildQuotationSnapshot(): QuotationData {
+  return {
     ...quotation.value,
     totals: {
       ...quotation.value.totals,
@@ -145,7 +186,32 @@ function handleDownload(): void {
       total: total.value,
     },
   }
+}
+
+function handleSave(): void {
+  // Build sync list to show the catalog popup — same as SENT flow
+  const syncItems = catalogSync.buildSyncList(
+    quotation.value.line_items,
+    catalog.value,
+  )
+
+  if (syncItems.length === 0) {
+    // No items to review — save directly
+    addToHistory(buildQuotationSnapshot())
+    showToast('Quotation saved to history ✓')
+    return
+  }
+
+  // Show popup in 'save' mode — won't change status on resolution
+  syncPopupMode.value = 'save'
+  pendingSyncItems.value = syncItems
+  showSyncPopup.value = true
+}
+
+function handleDownload(): void {
+  const forExport = buildQuotationSnapshot()
   exportQuotation(forExport)
+  addToHistory(forExport)
   showToast('Quotation downloaded', 'success')
 }
 
@@ -161,19 +227,30 @@ function handleNew(): void {
   if (isDirty.value) {
     showUnsavedConfirm.value = true
   } else {
-    resetQuotation()
+    const nextNum = getNextQuotationNumber()
+    resetQuotation(nextNum)
     showToast('New quotation created', 'success')
   }
 }
 
 function confirmDiscard(): void {
   showUnsavedConfirm.value = false
-  resetQuotation()
+  const nextNum = getNextQuotationNumber()
+  resetQuotation(nextNum)
   showToast('New quotation created', 'success')
 }
 
 function cancelDiscard(): void {
   showUnsavedConfirm.value = false
+}
+
+// ── History Load Handler ───────────────────────────────────────
+
+function handleLoadFromHistory(entry: QuotationData): void {
+  // Deep clone to prevent mutation of stored history data
+  const cloned = JSON.parse(JSON.stringify(entry))
+  loadQuotation(cloned)
+  activeTab.value = 'editor'
 }
 
 // ── Line item handlers ────────────────────────────────────────
@@ -210,11 +287,13 @@ function handleStatusChange(val: QuotationStatus): void {
 
   if (syncItems.length === 0) {
     setStatus('SENT')
+    addToHistory(buildQuotationSnapshot())
     showToast('Status updated to SENT')
     return
   }
 
   // Show popup, delay status update
+  syncPopupMode.value = 'sent'
   pendingSyncItems.value = syncItems
   showSyncPopup.value = true
 }
@@ -232,7 +311,10 @@ function handleSyncSaveSelected(checkedItems: CatalogSyncItem[]): void {
     quotation.value.meta.issue_date,
     quotation.value.meta.quotation_number,
   )
-  setStatus('SENT')
+  if (syncPopupMode.value === 'sent') {
+    setStatus('SENT')
+  }
+  addToHistory(buildQuotationSnapshot())
   showToast(`${toApply.length} items saved to catalog ✓`)
   showSyncPopup.value = false
   pendingSyncItems.value = []
@@ -249,15 +331,23 @@ function handleSyncSaveAll(items: CatalogSyncItem[]): void {
     quotation.value.meta.issue_date,
     quotation.value.meta.quotation_number,
   )
-  setStatus('SENT')
+  if (syncPopupMode.value === 'sent') {
+    setStatus('SENT')
+  }
+  addToHistory(buildQuotationSnapshot())
   showToast(`${toApply.length} items saved to catalog ✓`)
   showSyncPopup.value = false
   pendingSyncItems.value = []
 }
 
 function handleSyncClose(): void {
-  setStatus('SENT')
-  showToast('Status updated to SENT, catalog unchanged')
+  if (syncPopupMode.value === 'sent') {
+    setStatus('SENT')
+    showToast('Status updated to SENT, catalog unchanged')
+  } else {
+    showToast('Quotation saved to history ✓')
+  }
+  addToHistory(buildQuotationSnapshot())
   showSyncPopup.value = false
   pendingSyncItems.value = []
 }
@@ -355,15 +445,22 @@ watch(
             @remove:item="handleRemoveItem"
           />
 
+          <TaxDiscount
+            :discountPercent="quotation.totals.discount_percent"
+            :taxPercent="quotation.totals.tax_percent"
+            :discountLabel="quotation.discount_label"
+            :taxLabel="quotation.tax_label"
+            @update:totals="(patch) => updateTotalsConfig(patch)"
+          />
+
           <TotalsFields
-            :totals="quotation.totals"
             :currency="quotation.meta.currency"
             :subtotal="subtotal"
             :discountAmount="discount_amount"
             :taxAmount="tax_amount"
             :total="total"
+            :discountLabel="quotation.discount_label"
             :taxLabel="quotation.tax_label"
-            @update:totals="(patch) => updateTotalsConfig(patch)"
           />
 
           <NotesField
@@ -374,7 +471,10 @@ watch(
 
         <!-- History tab -->
         <div class="tab-pane" :class="{ active: activeTab === 'history' }">
-          <div class="hist-empty">No quotations yet.<br>Create or upload one.</div>
+          <HistoryPanel
+            :history="history"
+            @load:entry="handleLoadFromHistory"
+          />
         </div>
 
         <!-- Catalog tab -->
@@ -417,6 +517,9 @@ watch(
         </AppButton>
         <AppButton variant="primary" size="sm" @click="handleDownload">
           ↓ JSON
+        </AppButton>
+        <AppButton variant="secondary" size="sm" @click="handleSave">
+          💾 Save
         </AppButton>
         <AppButton variant="secondary" size="sm" @click="handlePdf">
           ⎙ PDF

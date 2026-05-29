@@ -23,6 +23,7 @@ function createSampleQuotation(): QuotationData {
     ],
     totals: { subtotal: 3500000, discount_percent: 0, discount_amount: 0, tax_percent: 11, tax_amount: 385000, total: 3885000 },
     tax_label: 'PPN',
+    discount_label: 'Discount',
     notes: '',
     created_at: '2026-05-19T10:00:00Z',
     updated_at: '2026-05-19T10:00:00Z',

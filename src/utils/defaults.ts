@@ -12,6 +12,7 @@ export const DEFAULT_TEMPLATE: TemplateId = 'classic'
 export const DEFAULT_TAX_RATE = 11
 export const DEFAULT_DISCOUNT = 0
 export const DEFAULT_TAX_LABEL = 'PPN'
+export const DEFAULT_DISCOUNT_LABEL = 'Discount'
 export const DEFAULT_NOTES = ''
 
 function todayStr(): string {
@@ -59,9 +60,19 @@ function emptyLineItem(): LineItem {
 }
 
 /**
- * Create a fresh QuotationData with sensible defaults.
+ * Format a number as QUO-XXX with zero-padding.
+ * E.g., 1 → "QUO-001", 42 → "QUO-042"
  */
-export function createEmptyQuotation(): QuotationData {
+export function formatQuotationNumber(num: number): string {
+  return `QUO-${String(num).padStart(3, '0')}`
+}
+
+/**
+ * Create a fresh QuotationData with sensible defaults.
+ *
+ * @param nextNumber - Optional next quotation number (defaults to 1 → QUO-001)
+ */
+export function createEmptyQuotation(nextNumber?: number): QuotationData {
   const now = new Date()
   const nowStr = now.toISOString()
   return {
@@ -69,13 +80,17 @@ export function createEmptyQuotation(): QuotationData {
     type: 'quotation',
     template: DEFAULT_TEMPLATE,
     status: DEFAULT_STATUS,
-    meta: emptyMeta(),
+    meta: {
+      ...emptyMeta(),
+      quotation_number: formatQuotationNumber(nextNumber ?? 1),
+    },
     from: emptyParty(),
     to: emptyParty(),
     logo: null,
     line_items: [emptyLineItem()],
     totals: emptyTotals(),
     tax_label: DEFAULT_TAX_LABEL,
+    discount_label: DEFAULT_DISCOUNT_LABEL,
     notes: DEFAULT_NOTES,
     created_at: nowStr,
     updated_at: nowStr,

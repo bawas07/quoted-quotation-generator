@@ -41,6 +41,7 @@ function createSampleQuotation(): QuotationData {
       total: 4995000,
     },
     tax_label: 'PPN',
+    discount_label: 'Discount',
     notes: 'Valid for 14 days.',
     created_at: '2026-05-19T10:00:00Z',
     updated_at: '2026-05-19T10:00:00Z',
