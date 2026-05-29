@@ -4,10 +4,13 @@
 
 Provides a set of template selection pills wired to reactive state for changing the quotation's visual template.
 
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Template selection pills
 `TemplateSwitcher` MUST render 5 pill-style buttons with capitalized display names: Classic, Minimal, Bold, Sidebar, and Friendly.
+
+**Previous behavior:** Labels used raw template IDs (classic, minimal, bold, sidebar, friendly).
+**New behavior:** Labels use capitalized display names (Classic, Minimal, Bold, Sidebar, Friendly). The internal `modelValue` still uses lowercase template IDs.
 
 #### Scenario: All templates shown with display names
 - **WHEN** `TemplateSwitcher` renders

@@ -4,7 +4,7 @@
 
 Provides the central reactive quotation state with computed totals, dirty tracking, and template switching animation state, serving as the single source of truth for all form and preview components.
 
-## Requirements
+## Existing Requirements
 
 ### Requirement: Central reactive quotation state
 `useQuotation` composable MUST export a reactive `quotation: Ref<QuotationData>` initialized with `createEmptyQuotation()`.
@@ -44,6 +44,8 @@ Provides the central reactive quotation state with computed totals, dirty tracki
 #### Scenario: isDirty becomes true on mutation
 - **WHEN** a field on `quotation.value` is modified
 - **THEN** `isDirty.value` becomes `true`
+
+## ADDED Requirements
 
 ### Requirement: useTemplate composable for cross-fade animation
 A `useTemplate` composable MUST export `isSwitching: Ref<boolean>` initialized `false`, and `triggerSwitch()` that sets `isSwitching` to `true`, then after 150ms sets it back to `false`.

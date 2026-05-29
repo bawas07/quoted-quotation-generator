@@ -5,6 +5,7 @@
 
 import { ref, watch } from 'vue'
 import type { LineItem, CatalogEntry, CatalogSyncItem, QuotationStatus, TemplateId } from './types/quotation'
+import type { Component } from 'vue'
 
 // Composables
 import { useQuotation } from './composables/useQuotation'
@@ -12,6 +13,7 @@ import { exportQuotation, parseQuotationFile } from './composables/useJsonIO'
 import { useToast } from './composables/useToast'
 import { useCatalogSync } from './composables/useCatalogSync'
 import { useCatalog } from './composables/useCatalog'
+import { useTemplate } from './composables/useTemplate'
 
 // Shells
 import SidebarShell from './components/sidebar/SidebarShell.vue'
@@ -21,7 +23,6 @@ import PreviewPanel from './components/preview/PreviewPanel.vue'
 import LogoUpload from './components/sidebar/LogoUpload.vue'
 import PartyFields from './components/sidebar/PartyFields.vue'
 import MetaFields from './components/sidebar/MetaFields.vue'
-import StatusSelector from './components/sidebar/StatusSelector.vue'
 import LineItemsTable from './components/sidebar/LineItemsTable.vue'
 import TotalsFields from './components/sidebar/TotalsFields.vue'
 import NotesField from './components/sidebar/NotesField.vue'
@@ -34,6 +35,13 @@ import CatalogSyncPopup from './components/catalog/CatalogSyncPopup.vue'
 // Preview components
 import StatusBar from './components/preview/StatusBar.vue'
 import TemplateSwitcher from './components/preview/TemplateSwitcher.vue'
+
+// Template components (dynamic rendering)
+import TemplateClassic from './components/preview/templates/TemplateClassic.vue'
+import TemplateMinimal from './components/preview/templates/TemplateMinimal.vue'
+import TemplateBold from './components/preview/templates/TemplateBold.vue'
+import TemplateSidebar from './components/preview/templates/TemplateSidebar.vue'
+import TemplateFriendly from './components/preview/templates/TemplateFriendly.vue'
 
 // ── Composable instances ──────────────────────────────────────
 
@@ -61,6 +69,16 @@ const {
 const { showToast } = useToast()
 const catalogSync = useCatalogSync()
 const { catalog } = useCatalog()
+const { isSwitching, triggerSwitch } = useTemplate()
+
+// Template component map for dynamic rendering
+const TEMPLATE_COMPONENTS: Record<TemplateId, Component> = {
+  classic: TemplateClassic,
+  minimal: TemplateMinimal,
+  bold: TemplateBold,
+  sidebar: TemplateSidebar,
+  friendly: TemplateFriendly,
+}
 
 // ── Sync Popup State ──────────────────────────────────────────
 
@@ -244,11 +262,17 @@ function handleSyncClose(): void {
   pendingSyncItems.value = []
 }
 
+// ── Template Switch Handler (cross-fade) ──────────────────────
+
+function handleTemplateChange(tpl: TemplateId): void {
+  triggerSwitch()
+  setTemplate(tpl)
+}
+
 // ── 80ms debounce for preview updates ─────────────────────────
 
 const debouncedNumber = ref(quotation.value.meta.quotation_number)
 const debouncedClient = ref(quotation.value.to.name)
-const debouncedTemplate = ref(quotation.value.template)
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -256,14 +280,12 @@ watch(
   [
     () => quotation.value.meta.quotation_number,
     () => quotation.value.to.name,
-    () => quotation.value.template,
   ],
-  ([num, name, tpl]) => {
+  ([num, name]) => {
     if (debounceTimer) clearTimeout(debounceTimer)
     debounceTimer = setTimeout(() => {
       debouncedNumber.value = num
       debouncedClient.value = name
-      debouncedTemplate.value = tpl
     }, 80)
   },
   { flush: 'post' },
@@ -409,27 +431,27 @@ watch(
     <PreviewPanel>
       <div class="preview-topbar">
         <TemplateSwitcher
-          :modelValue="debouncedTemplate"
-          @update:modelValue="(tpl: TemplateId) => setTemplate(tpl)"
+          :modelValue="quotation.template"
+          @update:modelValue="handleTemplateChange"
         />
-        <div class="preview-actions">
-          <div class="status-wrap">
-            <StatusSelector
-              :modelValue="quotation.status"
-              @update:modelValue="handleStatusChange"
-            />
-          </div>
-        </div>
       </div>
 
       <StatusBar
         :quotationNumber="debouncedNumber"
         :clientName="debouncedClient"
+        :modelValue="quotation.status"
+        @update:modelValue="handleStatusChange"
       />
 
       <div class="preview-scroll">
-        <div class="invoice-paper">
-          <!-- Template render target — M4 -->
+        <div
+          class="invoice-paper"
+          :class="{ switching: isSwitching }"
+        >
+          <component
+            :is="TEMPLATE_COMPONENTS[quotation.template]"
+            :quotation="quotation"
+          />
         </div>
       </div>
     </PreviewPanel>

@@ -4,10 +4,13 @@
 
 Displays the current quotation number, client name, and status badge derived from reactive state, updating automatically as the form changes.
 
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Status bar displays quotation info
 `StatusBar` MUST display the quotation number and client name on the left side, and a status badge with dropdown on the right side, derived from the current reactive state.
+
+**Previous behavior:** Status bar showed only quotation number and client name.
+**New behavior:** Status bar shows quotation number and client name on the left, and a clickable status badge with inline dropdown on the right.
 
 #### Scenario: Status bar shows data with status badge
 - **WHEN** `quotation.value.meta.number` is `'QUO-001'`, `quotation.value.to.name` is `'Acme Corp'`, and `quotation.value.status` is `'DRAFT'`

@@ -341,3 +341,7 @@
   flex-shrink: 0;
   position: relative;
 }
+
+.invoice-paper.switching {
+  opacity: 0;
+}
