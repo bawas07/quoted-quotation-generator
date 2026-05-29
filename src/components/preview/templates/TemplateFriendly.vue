@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import type { QuotationData } from '../../../types/quotation'
+import { formatAmount, formatDate } from '../../../utils/format'
 
-const props = defineProps<{
+defineProps<{
   quotation: QuotationData
 }>()
-
-function formatAmount(amount: number): string {
-  return Math.round(amount).toLocaleString('id-ID')
-}
 </script>
 
 <template>
@@ -49,11 +46,11 @@ function formatAmount(amount: number): string {
     <section class="info-bar">
       <div class="info-item">
         <span class="info-label">Issue Date</span>
-        <span class="info-value">{{ quotation.meta.issue_date }}</span>
+        <span class="info-value">{{ formatDate(quotation.meta.issue_date) }}</span>
       </div>
       <div class="info-item">
         <span class="info-label">Valid Until</span>
-        <span class="info-value">{{ quotation.meta.valid_until }}</span>
+        <span class="info-value">{{ formatDate(quotation.meta.valid_until) }}</span>
       </div>
       <div class="info-item">
         <span class="info-label">Currency</span>
@@ -81,8 +78,8 @@ function formatAmount(amount: number): string {
           <tr v-for="item in quotation.line_items" :key="item.id">
             <td class="col-desc">{{ item.description }}</td>
             <td class="col-qty">{{ item.quantity }}</td>
-            <td class="col-price">{{ formatAmount(item.unit_price) }}</td>
-            <td class="col-amount">{{ formatAmount(item.amount) }}</td>
+            <td class="col-price">{{ formatAmount(item.unit_price, quotation.meta.currency) }}</td>
+            <td class="col-amount">{{ formatAmount(item.amount, quotation.meta.currency) }}</td>
           </tr>
         </tbody>
       </table>
@@ -93,19 +90,19 @@ function formatAmount(amount: number): string {
       <div class="totals">
         <div class="total-row">
           <span>Subtotal</span>
-          <span>{{ formatAmount(quotation.totals.subtotal) }}</span>
+          <span>{{ formatAmount(quotation.totals.subtotal, quotation.meta.currency) }}</span>
         </div>
         <div v-if="quotation.totals.discount_percent > 0" class="total-row">
           <span>Discount ({{ quotation.totals.discount_percent }}%)</span>
-          <span>-{{ formatAmount(quotation.totals.discount_amount) }}</span>
+          <span>-{{ formatAmount(quotation.totals.discount_amount, quotation.meta.currency) }}</span>
         </div>
         <div v-if="quotation.totals.tax_percent > 0" class="total-row">
           <span>{{ quotation.tax_label }} ({{ quotation.totals.tax_percent }}%)</span>
-          <span>{{ formatAmount(quotation.totals.tax_amount) }}</span>
+          <span>{{ formatAmount(quotation.totals.tax_amount, quotation.meta.currency) }}</span>
         </div>
         <div class="total-row total-final">
           <span>Total</span>
-          <span>{{ formatAmount(quotation.totals.total) }}</span>
+          <span>{{ formatAmount(quotation.totals.total, quotation.meta.currency) }}</span>
         </div>
       </div>
     </section>
