@@ -91,6 +91,8 @@ const TEMPLATE_COMPONENTS: Record<TemplateId, Component> = {
 
 const showSyncPopup = ref(false)
 const pendingSyncItems = ref<CatalogSyncItem[]>([])
+type SyncPopupMode = 'sent' | 'save'
+const syncPopupMode = ref<SyncPopupMode>('sent')
 
 // ── Tab Switching ─────────────────────────────────────────────
 
@@ -168,10 +170,12 @@ function triggerImport(): void {
   importFileInput.value?.click()
 }
 
-function handleDownload(): void {
-  // Merge computed totals into a snapshot before serialization
-  // The stored totals are never written back — computed values are the source of truth
-  const forExport = {
+/**
+ * Build a complete quotation snapshot with computed totals.
+ * Used by save-to-history, JSON download, and auto-save on SENT.
+ */
+function buildQuotationSnapshot(): QuotationData {
+  return {
     ...quotation.value,
     totals: {
       ...quotation.value.totals,
@@ -181,6 +185,30 @@ function handleDownload(): void {
       total: total.value,
     },
   }
+}
+
+function handleSave(): void {
+  // Build sync list to show the catalog popup — same as SENT flow
+  const syncItems = catalogSync.buildSyncList(
+    quotation.value.line_items,
+    catalog.value,
+  )
+
+  if (syncItems.length === 0) {
+    // No items to review — save directly
+    addToHistory(buildQuotationSnapshot())
+    showToast('Quotation saved to history ✓')
+    return
+  }
+
+  // Show popup in 'save' mode — won't change status on resolution
+  syncPopupMode.value = 'save'
+  pendingSyncItems.value = syncItems
+  showSyncPopup.value = true
+}
+
+function handleDownload(): void {
+  const forExport = buildQuotationSnapshot()
   exportQuotation(forExport)
   addToHistory(forExport)
   showToast('Quotation downloaded', 'success')
@@ -258,11 +286,13 @@ function handleStatusChange(val: QuotationStatus): void {
 
   if (syncItems.length === 0) {
     setStatus('SENT')
+    addToHistory(buildQuotationSnapshot())
     showToast('Status updated to SENT')
     return
   }
 
   // Show popup, delay status update
+  syncPopupMode.value = 'sent'
   pendingSyncItems.value = syncItems
   showSyncPopup.value = true
 }
@@ -280,7 +310,10 @@ function handleSyncSaveSelected(checkedItems: CatalogSyncItem[]): void {
     quotation.value.meta.issue_date,
     quotation.value.meta.quotation_number,
   )
-  setStatus('SENT')
+  if (syncPopupMode.value === 'sent') {
+    setStatus('SENT')
+  }
+  addToHistory(buildQuotationSnapshot())
   showToast(`${toApply.length} items saved to catalog ✓`)
   showSyncPopup.value = false
   pendingSyncItems.value = []
@@ -297,15 +330,23 @@ function handleSyncSaveAll(items: CatalogSyncItem[]): void {
     quotation.value.meta.issue_date,
     quotation.value.meta.quotation_number,
   )
-  setStatus('SENT')
+  if (syncPopupMode.value === 'sent') {
+    setStatus('SENT')
+  }
+  addToHistory(buildQuotationSnapshot())
   showToast(`${toApply.length} items saved to catalog ✓`)
   showSyncPopup.value = false
   pendingSyncItems.value = []
 }
 
 function handleSyncClose(): void {
-  setStatus('SENT')
-  showToast('Status updated to SENT, catalog unchanged')
+  if (syncPopupMode.value === 'sent') {
+    setStatus('SENT')
+    showToast('Status updated to SENT, catalog unchanged')
+  } else {
+    showToast('Quotation saved to history ✓')
+  }
+  addToHistory(buildQuotationSnapshot())
   showSyncPopup.value = false
   pendingSyncItems.value = []
 }
@@ -468,6 +509,9 @@ watch(
         </AppButton>
         <AppButton variant="primary" size="sm" @click="handleDownload">
           ↓ JSON
+        </AppButton>
+        <AppButton variant="secondary" size="sm" @click="handleSave">
+          💾 Save
         </AppButton>
         <AppButton variant="secondary" size="sm" @click="handlePdf">
           ⎙ PDF
