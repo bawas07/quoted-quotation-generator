@@ -59,9 +59,19 @@ function emptyLineItem(): LineItem {
 }
 
 /**
- * Create a fresh QuotationData with sensible defaults.
+ * Format a number as QUO-XXX with zero-padding.
+ * E.g., 1 → "QUO-001", 42 → "QUO-042"
  */
-export function createEmptyQuotation(): QuotationData {
+export function formatQuotationNumber(num: number): string {
+  return `QUO-${String(num).padStart(3, '0')}`
+}
+
+/**
+ * Create a fresh QuotationData with sensible defaults.
+ *
+ * @param nextNumber - Optional next quotation number (defaults to 1 → QUO-001)
+ */
+export function createEmptyQuotation(nextNumber?: number): QuotationData {
   const now = new Date()
   const nowStr = now.toISOString()
   return {
@@ -69,7 +79,10 @@ export function createEmptyQuotation(): QuotationData {
     type: 'quotation',
     template: DEFAULT_TEMPLATE,
     status: DEFAULT_STATUS,
-    meta: emptyMeta(),
+    meta: {
+      ...emptyMeta(),
+      quotation_number: formatQuotationNumber(nextNumber ?? 1),
+    },
     from: emptyParty(),
     to: emptyParty(),
     logo: null,

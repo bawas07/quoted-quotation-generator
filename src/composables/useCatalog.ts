@@ -77,11 +77,21 @@ export function useCatalog() {
     return fuzzySearch(query, catalog.value).slice(0, 6)
   }
 
+  /**
+   * Replace all catalog items with a new set and persist to localStorage.
+   * Used by workspace import to restore a merged catalog.
+   */
+  function replaceAll(items: CatalogEntry[]): void {
+    catalog.value = items
+    persist()
+  }
+
   return {
     catalog: readonly(catalog) as Ref<CatalogEntry[]>,
     addItem,
     updateItem,
     removeItem,
     searchCatalog,
+    replaceAll,
   }
 }

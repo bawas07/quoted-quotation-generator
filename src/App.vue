@@ -4,7 +4,7 @@
 // wires all composables into a reactive quotation editing experience.
 
 import { ref, watch } from 'vue'
-import type { LineItem, CatalogEntry, CatalogSyncItem, QuotationStatus, TemplateId } from './types/quotation'
+import type { LineItem, CatalogEntry, CatalogSyncItem, QuotationStatus, TemplateId, QuotationData, WorkspaceBackup } from './types/quotation'
 import type { Component } from 'vue'
 
 // Composables
@@ -14,6 +14,8 @@ import { useToast } from './composables/useToast'
 import { useCatalogSync } from './composables/useCatalogSync'
 import { useCatalog } from './composables/useCatalog'
 import { useTemplate } from './composables/useTemplate'
+import { useHistory } from './composables/useHistory'
+import { useWorkspaceIO } from './composables/useWorkspaceIO'
 
 // Shells
 import SidebarShell from './components/sidebar/SidebarShell.vue'
@@ -31,6 +33,7 @@ import CatalogEditDrawer from './components/catalog/CatalogEditDrawer.vue'
 import AppButton from './components/shared/AppButton.vue'
 import AppToast from './components/shared/AppToast.vue'
 import CatalogSyncPopup from './components/catalog/CatalogSyncPopup.vue'
+import HistoryPanel from './components/HistoryPanel.vue'
 
 // Preview components
 import StatusBar from './components/preview/StatusBar.vue'
@@ -44,6 +47,9 @@ import TemplateSidebar from './components/preview/templates/TemplateSidebar.vue'
 import TemplateFriendly from './components/preview/templates/TemplateFriendly.vue'
 
 // ── Composable instances ──────────────────────────────────────
+
+const { history, addToHistory, getNextQuotationNumber } = useHistory()
+const initialNextNumber = getNextQuotationNumber()
 
 const {
   quotation,
@@ -64,12 +70,13 @@ const {
   setStatus,
   setTemplate,
   setNotes,
-} = useQuotation()
+} = useQuotation(initialNextNumber)
 
 const { showToast } = useToast()
 const catalogSync = useCatalogSync()
 const { catalog } = useCatalog()
 const { isSwitching, triggerSwitch } = useTemplate()
+const { importWorkspaceData } = useWorkspaceIO()
 
 // Template component map for dynamic rendering
 const TEMPLATE_COMPONENTS: Record<TemplateId, Component> = {
@@ -118,14 +125,43 @@ async function handleImportFile(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  input.value = ''
+
   try {
-    const data = await parseQuotationFile(file)
-    loadQuotation(data)
+    // Read file text first to inspect the type field
+    const text = await file.text()
+    const parsed: unknown = JSON.parse(text)
+
+    if (!parsed || typeof parsed !== 'object') {
+      showToast('Unknown file format.', 'error')
+      return
+    }
+
+    const data = parsed as Record<string, unknown>
+
+    if (data.type === 'workspace_backup') {
+      // Route to workspace import
+      importWorkspaceData(data as unknown as WorkspaceBackup)
+      return
+    }
+
+    // For quotation type, delegate to parseQuotationFile for full validation
+    // Re-create the file from text since we already consumed the original
+    const reprocessedFile = new File([text], file.name, { type: 'application/json' })
+    const quotation = await parseQuotationFile(reprocessedFile)
+    loadQuotation(quotation)
+    addToHistory(quotation)
     showToast('Quotation loaded successfully', 'success')
   } catch (err) {
-    showToast(err instanceof Error ? err.message : 'Failed to import quotation', 'error')
+    if (err instanceof SyntaxError) {
+      showToast('Couldn\'t read this file.', 'error')
+    } else {
+      showToast(
+        err instanceof Error ? err.message : 'Failed to import file',
+        'error'
+      )
+    }
   }
-  input.value = ''
 }
 
 function triggerImport(): void {
@@ -146,6 +182,7 @@ function handleDownload(): void {
     },
   }
   exportQuotation(forExport)
+  addToHistory(forExport)
   showToast('Quotation downloaded', 'success')
 }
 
@@ -161,19 +198,30 @@ function handleNew(): void {
   if (isDirty.value) {
     showUnsavedConfirm.value = true
   } else {
-    resetQuotation()
+    const nextNum = getNextQuotationNumber()
+    resetQuotation(nextNum)
     showToast('New quotation created', 'success')
   }
 }
 
 function confirmDiscard(): void {
   showUnsavedConfirm.value = false
-  resetQuotation()
+  const nextNum = getNextQuotationNumber()
+  resetQuotation(nextNum)
   showToast('New quotation created', 'success')
 }
 
 function cancelDiscard(): void {
   showUnsavedConfirm.value = false
+}
+
+// ── History Load Handler ───────────────────────────────────────
+
+function handleLoadFromHistory(entry: QuotationData): void {
+  // Deep clone to prevent mutation of stored history data
+  const cloned = JSON.parse(JSON.stringify(entry))
+  loadQuotation(cloned)
+  activeTab.value = 'editor'
 }
 
 // ── Line item handlers ────────────────────────────────────────
@@ -374,7 +422,10 @@ watch(
 
         <!-- History tab -->
         <div class="tab-pane" :class="{ active: activeTab === 'history' }">
-          <div class="hist-empty">No quotations yet.<br>Create or upload one.</div>
+          <HistoryPanel
+            :history="history"
+            @load:entry="handleLoadFromHistory"
+          />
         </div>
 
         <!-- Catalog tab -->

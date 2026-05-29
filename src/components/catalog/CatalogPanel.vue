@@ -6,12 +6,14 @@
 import { ref, computed } from 'vue'
 import type { CatalogEntry } from '../../types/quotation'
 import { useCatalog } from '../../composables/useCatalog'
+import { useWorkspaceIO } from '../../composables/useWorkspaceIO'
 import { useToast } from '../../composables/useToast'
 import CatalogSearch from './CatalogSearch.vue'
 import CatalogItem from './CatalogItem.vue'
 
 const { catalog, searchCatalog, removeItem } = useCatalog()
 const { showToast } = useToast()
+const { exportWorkspace, importWorkspace } = useWorkspaceIO()
 
 // ── Emits ─────────────────────────────────────────────────────
 
@@ -55,14 +57,24 @@ function handleDelete(id: string): void {
   showToast('Item removed from catalog', 'success')
 }
 
-// ── Export / Import stub ──────────────────────────────────────
+// ── Export / Import ───────────────────────────────────────────
 
 function handleExport(): void {
-  showToast('Coming in M5', 'warning')
+  exportWorkspace()
 }
 
-function handleImport(): void {
-  showToast('Coming in M5', 'warning')
+const importFileInput = ref<HTMLInputElement | null>(null)
+
+function handleImportFile(event: Event): void {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  input.value = ''
+  importWorkspace(file)
+}
+
+function triggerImport(): void {
+  importFileInput.value?.click()
 }
 </script>
 
@@ -91,12 +103,19 @@ function handleImport(): void {
       />
     </div>
 
-    <!-- Export / Import placeholder buttons -->
+    <!-- Export / Import buttons -->
     <div class="catalog-footer">
       <button class="footer-btn" type="button" @click="handleExport">
         ↓ Export Workspace
       </button>
-      <button class="footer-btn" type="button" @click="handleImport">
+      <input
+        ref="importFileInput"
+        type="file"
+        accept=".json"
+        style="display:none"
+        @change="handleImportFile"
+      />
+      <button class="footer-btn" type="button" @click="triggerImport">
         ↑ Import Workspace
       </button>
     </div>

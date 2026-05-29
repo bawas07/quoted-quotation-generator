@@ -7,8 +7,8 @@ import { v4 as uuidv4 } from 'uuid'
 import type { QuotationData, LineItem, QuotationStatus, TemplateId, QuotationMeta, Party, QuotationLogo, QuotationTotals } from '../types/quotation'
 import { createEmptyQuotation } from '../utils/defaults'
 
-export function useQuotation() {
-  const quotation: Ref<QuotationData> = ref(createEmptyQuotation())
+export function useQuotation(nextNumber?: number) {
+  const quotation: Ref<QuotationData> = ref(createEmptyQuotation(nextNumber))
   const isDirty: Ref<boolean> = ref(false)
 
   // ── Computed Totals ──────────────────────────────────────────
@@ -44,8 +44,8 @@ export function useQuotation() {
     isDirty.value = false
   }
 
-  function resetQuotation(): void {
-    quotation.value = createEmptyQuotation()
+  function resetQuotation(nextNumber?: number): void {
+    quotation.value = createEmptyQuotation(nextNumber)
     isDirty.value = false
   }
 
