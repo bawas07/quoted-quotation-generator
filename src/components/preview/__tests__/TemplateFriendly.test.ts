@@ -23,6 +23,7 @@ function createSampleQuotation(): QuotationData {
     ],
     totals: { subtotal: 3500, discount_percent: 0, discount_amount: 0, tax_percent: 0, tax_amount: 0, total: 3500 },
     tax_label: 'GST',
+    discount_label: 'Discount',
     notes: 'Thank you for your business!',
     created_at: '2026-05-19T10:00:00Z',
     updated_at: '2026-05-19T10:00:00Z',
