@@ -273,7 +273,6 @@ function handleTemplateChange(tpl: TemplateId): void {
 
 const debouncedNumber = ref(quotation.value.meta.quotation_number)
 const debouncedClient = ref(quotation.value.to.name)
-const debouncedTemplate = ref(quotation.value.template)
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -281,14 +280,12 @@ watch(
   [
     () => quotation.value.meta.quotation_number,
     () => quotation.value.to.name,
-    () => quotation.value.template,
   ],
-  ([num, name, tpl]) => {
+  ([num, name]) => {
     if (debounceTimer) clearTimeout(debounceTimer)
     debounceTimer = setTimeout(() => {
       debouncedNumber.value = num
       debouncedClient.value = name
-      debouncedTemplate.value = tpl
     }, 80)
   },
   { flush: 'post' },
