@@ -1,4 +1,8 @@
 // Print — trigger browser print with A4 layout
 export function usePrint() {
-  // stub
+  function triggerPrint(): void {
+    window.print()
+  }
+
+  return { triggerPrint }
 }

@@ -10,7 +10,7 @@ defineProps<{
 <template>
   <div class="tpl-sidebar-layout">
     <!-- Left Sidebar -->
-    <aside class="sidebar">
+    <aside class="tpl-sidebar">
       <!-- Logo -->
       <div v-if="quotation.logo?.data" class="logo-section">
         <img :src="quotation.logo.data" :alt="quotation.logo.name" />
@@ -131,7 +131,7 @@ defineProps<{
 }
 
 /* ── Sidebar ─────────────────────────────── */
-.sidebar {
+.tpl-sidebar {
   background: var(--sky);
   padding: var(--space-6);
   display: flex;
@@ -411,5 +411,32 @@ defineProps<{
   color: var(--text-secondary);
   line-height: 1.6;
   white-space: pre-wrap;
+}
+
+@media print {
+  .tpl-sidebar-layout {
+    padding: 52px 56px;
+    box-shadow: none;
+  }
+
+  .tpl-sidebar {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  thead {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .tpl-status {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .notes-section {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
 }
 </style>
