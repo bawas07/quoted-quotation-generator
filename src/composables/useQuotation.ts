@@ -2,7 +2,7 @@
 // Central reactive state for the quotation form with computed totals,
 // CRUD methods for every field, and isDirty tracking.
 
-import { ref, computed, type Ref } from 'vue'
+import { ref, computed, watch, type Ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import type { QuotationData, LineItem, QuotationStatus, TemplateId, QuotationMeta, Party, QuotationLogo, QuotationTotals } from '../types/quotation'
 import { createEmptyQuotation } from '../utils/defaults'
@@ -28,6 +28,17 @@ export function useQuotation(nextNumber?: number) {
   const total = computed(() =>
     subtotal.value - discount_amount.value + tax_amount.value
   )
+
+  // ── Sync Computed Totals to State ───────────────────────────
+
+  // Templates read quotation.totals.* directly, so we keep them
+  // in sync with the live computed values on every change.
+  watch([subtotal, discount_amount, tax_amount, total], ([s, d, t, tot]) => {
+    quotation.value.totals.subtotal = s
+    quotation.value.totals.discount_amount = d
+    quotation.value.totals.tax_amount = t
+    quotation.value.totals.total = tot
+  }, { immediate: true })
 
   // ── Dirty Tracking ───────────────────────────────────────────
 
