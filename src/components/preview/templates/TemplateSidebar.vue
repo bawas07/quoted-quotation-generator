@@ -415,31 +415,16 @@ defineProps<{
 
 @media print {
   .tpl-sidebar-layout {
-    display: block;
+    display: grid;
+    grid-template-columns: 198px 1fr;
+    min-height: 0;
     padding: 52px 56px;
     box-shadow: none;
   }
 
   .tpl-sidebar {
-    padding: 0;
-    margin-bottom: 28px;
-    background: none;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
-  }
-
-  .logo-section {
-    float: right;
-    margin: 0 0 12px 20px;
-  }
-
-  .logo-section img {
-    max-width: 100px;
-    max-height: 50px;
-  }
-
-  .sidebar-section {
-    margin: 0;
   }
 
   thead {
