@@ -407,4 +407,31 @@ defineProps<{
   font-weight: 700;
   color: var(--navy);
 }
+
+@media print {
+  .template-bold {
+    padding: 52px 56px;
+    box-shadow: none;
+  }
+
+  .tpl-header {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .tpl-info-band {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  thead {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .tpl-status {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
 </style>

@@ -16,6 +16,7 @@ import { useCatalog } from './composables/useCatalog'
 import { useTemplate } from './composables/useTemplate'
 import { useHistory } from './composables/useHistory'
 import { useWorkspaceIO } from './composables/useWorkspaceIO'
+import { usePrint } from './composables/usePrint'
 
 // Shells
 import SidebarShell from './components/sidebar/SidebarShell.vue'
@@ -74,6 +75,8 @@ const {
 } = useQuotation(initialNextNumber)
 
 const { showToast } = useToast()
+
+const { triggerPrint } = usePrint()
 const catalogSync = useCatalogSync()
 const { catalog } = useCatalog()
 const { isSwitching, triggerSwitch } = useTemplate()
@@ -216,7 +219,7 @@ function handleDownload(): void {
 }
 
 function handlePdf(): void {
-  showToast('PDF export coming soon', 'warning')
+  triggerPrint()
 }
 
 // ── Unsaved Changes Confirmation ──────────────────────────────
